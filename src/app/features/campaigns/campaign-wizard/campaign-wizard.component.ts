@@ -1,24 +1,28 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { CampaignService } from '../../../core/services/campaign.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { businessValidators } from '../../../shared/validators/business.validators';
 import { EmailDesign } from './templates/template.model';
 import { DesignStepComponent } from './steps/design-step.component';
+import { AudienceStepComponent } from './steps/audience-step.component';
+import { NewCampaignRequest } from '../../../core/models/campaign.model';
+import { ContactList } from '../../../core/models/contact.model';
+import { ContactService } from '../../../core/services/contact.service';
 
 type WizardStep = 0 | 1 | 2 | 3;
 
 @Component({
   selector: 'app-campaign-wizard',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DesignStepComponent],
+  imports: [CommonModule, ReactiveFormsModule, DesignStepComponent, AudienceStepComponent],
   template: `
     <div class="max-w-4xl mx-auto">
       <div class="mb-8">
-        <h2 class="text-3xl font-bold text-gray-900">Nueva Campaña</h2>
-        <p class="text-gray-600 mt-1">Sigue los pasos para crear tu campaña</p>
+        <h2 class="text-3xl font-bold text-gray-900">{{ isEditing() ? 'Editar Campaña' : 'Nueva Campaña' }}</h2>
+        <p class="text-gray-600 mt-1">{{ isEditing() ? 'Modifica tu campaña existente' : 'Crea y guarda tu campaña como borrador' }}</p>
       </div>
 
       <!-- Stepper -->
@@ -102,25 +106,12 @@ type WizardStep = 0 | 1 | 2 | 3;
 
         <!-- PASO 3: AUDIENCIA -->
         @if (currentStep() === 2) {
-          <div class="space-y-6">
-            <div>
-              <h3 class="text-lg font-semibold text-gray-900 mb-1">Seleccionar Audiencia</h3>
-              <p class="text-sm text-gray-600">Elige la lista de destinatarios</p>
-            </div>
-
-            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <p class="text-sm text-yellow-800">⚠️ Funcionalidad de listas en desarrollo</p>
-            </div>
-
-            <div class="flex justify-between pt-4">
-              <button type="button" (click)="prevStep()" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
-                ← Anterior
-              </button>
-              <button type="button" (click)="nextStep()" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                Siguiente: Revisión →
-              </button>
-            </div>
-          </div>
+          <app-audience-step
+            [preSelectedListId]="selectedAudience()?.id || null"
+            (onNext)="onAudienceComplete($event)"
+            (onBack)="prevStep()"
+            (onListSelected)="onListSelected($event)">
+          </app-audience-step>
         }
 
         <!-- PASO 4: REVISIÓN -->
@@ -128,27 +119,46 @@ type WizardStep = 0 | 1 | 2 | 3;
           <div class="space-y-6">
             <div>
               <h3 class="text-lg font-semibold text-gray-900 mb-1">Revisión Final</h3>
-              <p class="text-sm text-gray-600">Verifica antes de enviar</p>
+              <p class="text-sm text-gray-600">Tu campaña está lista para enviar o guardar</p>
             </div>
 
             <div class="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
               <p><span class="text-gray-600">Asunto:</span> <span class="font-medium">{{ configForm.value.subject }}</span></p>
               <p><span class="text-gray-600">Remitente:</span> <span class="font-medium">{{ configForm.value.fromDisplayName }} via Mailboom</span></p>
               <p><span class="text-gray-600">Modo:</span> <span class="font-medium">{{ campaignDesign()?.mode === 'custom-html' ? 'HTML personalizado' : 'Diseñador visual' }}</span></p>
+              @if (selectedAudience()) {
+                <p class="flex items-center gap-2">
+                  <span class="text-gray-600">Audiencia:</span> 
+                  <span class="font-medium flex items-center gap-1">
+                    <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    {{ selectedAudience()?.name }} ({{ selectedAudience()?.contactCount }} contactos)
+                  </span>
+                </p>
+              }
             </div>
 
             <div class="border border-gray-200 rounded-lg overflow-hidden">
               <iframe [srcdoc]="getPreviewHtml()" class="w-full h-64 border-0"></iframe>
             </div>
 
-            <div class="flex justify-between pt-4">
-              <button type="button" (click)="prevStep()" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
-                ← Anterior
+            <!-- Acciones -->
+            <div class="flex flex-col sm:flex-row justify-between gap-3 pt-4">
+              <button type="button" (click)="prevStep()" 
+                      class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+                ← Atrás
               </button>
-              <button type="button" (click)="submit()" [disabled]="isSubmitting()" 
-                      class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300">
-                @if (isSubmitting()) { Enviando... } @else { 🚀 Crear Campaña }
-              </button>
+              <div class="flex gap-3">
+                <button type="button" (click)="saveDraft()" [disabled]="isSubmitting()"
+                        class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:bg-gray-300">
+                  💾 Guardar Borrador
+                </button>
+                <button type="button" (click)="goToSend()" [disabled]="isSubmitting()"
+                        class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300">
+                  🚀 Enviar Campaña →
+                </button>
+              </div>
             </div>
           </div>
         }
@@ -157,24 +167,148 @@ type WizardStep = 0 | 1 | 2 | 3;
     </div>
   `
 })
-export class CampaignWizardComponent {
+export class CampaignWizardComponent implements OnInit {
   currentStep = signal<WizardStep>(0);
   stepLabels = ['Configuración', 'Diseño', 'Audiencia', 'Revisión'];
   campaignDesign = signal<EmailDesign | null>(null);
+  selectedAudience = signal<ContactList | null>(null);
   isSubmitting = signal(false);
+  isEditing = signal(false);
+  editingCampaignId = signal<string | null>(null);
   
   configForm: FormGroup;
 
   constructor(
     private fb: FormBuilder,
     private campaignService: CampaignService,
+    private contactService: ContactService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     this.configForm = this.fb.group({
       subject: ['', businessValidators.subject],
       fromDisplayName: ['', businessValidators.fromDisplayName]
     });
+  }
+
+  ngOnInit() {
+    // Check for edit mode
+    this.route.queryParams.subscribe(params => {
+      const editId = params['edit'];
+      const listId = params['listId'];
+      
+      if (editId) {
+        // Edit existing campaign
+        this.loadCampaignForEdit(editId);
+      } else if (listId) {
+        // Pre-select the audience for new campaign
+        this.selectAudienceFromId(listId);
+      }
+    });
+  }
+
+  loadCampaignForEdit(campaignId: string) {
+    this.isEditing.set(true);
+    this.editingCampaignId.set(campaignId);
+    
+    this.campaignService.getCampaign(campaignId).subscribe({
+      next: (campaign) => {
+        console.log('Campaign loaded for edit:', campaign);
+        
+        // Populate form
+        this.configForm.patchValue({
+          subject: campaign.subject,
+          fromDisplayName: campaign.sender.replace(' via Mailboom', '')
+        });
+        
+        // Load design from HTML
+        this.campaignDesign.set({
+          mode: 'custom-html',
+          content: [],
+          customHtml: campaign.htmlContent,
+          backgroundColor: '#ffffff',
+          contentMaxWidth: 600,
+          header: { enabled: false, backgroundColor: '#ffffff', textColor: '#000000', text: '', height: 60, useImage: false, imageUrl: '' },
+          footer: { 
+            enabled: false, 
+            backgroundColor: '#f3f4f6', 
+            textColor: '#6b7280', 
+            companyName: '', 
+            address: '', 
+            phone: '', 
+            email: '', 
+            website: '', 
+            socialLinks: {},
+            customText: '', 
+            showUnsubscribe: false 
+          }
+        });
+        
+        // Load audience - first try, then reload if needed
+        this.loadAudienceForEdit(campaign.recipientListId);
+        
+        // Start at step 0 to allow viewing all steps
+        this.currentStep.set(0);
+      },
+      error: (err) => {
+        console.error('Error loading campaign:', err);
+        alert('Error al cargar campaña: ' + (err.error?.message || err.message));
+        this.router.navigate(['/campaigns']);
+      }
+    });
+  }
+
+  loadAudienceForEdit(listId: string) {
+    // First try with already loaded lists
+    let lists = this.contactService.contactLists();
+    if (lists.length > 0) {
+      const list = lists.find(l => l.id === listId);
+      if (list) {
+        this.selectedAudience.set(list);
+        return;
+      }
+    }
+    
+    // If no lists or list not found, load them
+    const userId = this.authService.currentUser()?.id;
+    if (userId) {
+      this.contactService.loadUserContactLists(userId);
+      // Try again after loading
+      setTimeout(() => {
+        lists = this.contactService.contactLists();
+        console.log('Available lists after load:', lists);
+        const list = lists.find(l => l.id === listId);
+        if (list) {
+          this.selectedAudience.set(list);
+          console.log('Audience selected:', list.name);
+        } else {
+          console.warn('Audience not found with id:', listId);
+        }
+      }, 500);
+    }
+  }
+
+  selectAudienceFromId(listId: string) {
+    const lists = this.contactService.contactLists();
+    const list = lists.find(l => l.id === listId);
+    if (list) {
+      this.selectedAudience.set(list);
+    } else {
+      // If lists not loaded yet, load them and then try again
+      const userId = this.authService.currentUser()?.id;
+      if (userId) {
+        this.contactService.loadUserContactLists(userId);
+        // Try again after a short delay
+        setTimeout(() => {
+          const lists2 = this.contactService.contactLists();
+          const list2 = lists2.find(l => l.id === listId);
+          if (list2) {
+            this.selectedAudience.set(list2);
+          }
+        }, 500);
+      }
+    }
   }
 
   nextStep() {
@@ -194,6 +328,19 @@ export class CampaignWizardComponent {
     this.nextStep();
   }
 
+  onListSelected(listId: string) {
+    // Find the list in the contact service
+    const lists = this.contactService.contactLists();
+    const list = lists.find(l => l.id === listId);
+    if (list) {
+      this.selectedAudience.set(list);
+    }
+  }
+
+  onAudienceComplete(listId: string) {
+    this.nextStep();
+  }
+
   getPreviewHtml(): string {
     const design = this.campaignDesign();
     if (!design) return '';
@@ -202,7 +349,6 @@ export class CampaignWizardComponent {
       return design.customHtml;
     }
     
-    // Generar HTML del diseñador visual
     return this.generateHtmlFromDesign(design);
   }
 
@@ -279,7 +425,13 @@ export class CampaignWizardComponent {
 
   submit() {
     const design = this.campaignDesign();
+    const audience = this.selectedAudience();
+    
     if (!design) return;
+    if (!audience) {
+      alert('Por favor selecciona una audiencia');
+      return;
+    }
 
     this.isSubmitting.set(true);
     
@@ -287,23 +439,104 @@ export class CampaignWizardComponent {
       ? (design.customHtml || '') 
       : this.generateHtmlFromDesign(design);
     
-    const request = {
-      ownerId: this.authService.currentUser()?.id || '',
+    const ownerId = this.authService.currentUser()?.id || '';
+    
+    // Crear request con la lista seleccionada
+    const request: NewCampaignRequest = {
+      ownerId: ownerId,
       subject: this.configForm.value.subject,
       htmlContent: htmlContent,
       sender: `${this.configForm.value.fromDisplayName} via Mailboom`,
-      recipientListId: 'temp-list-id'
+      recipientListId: audience.id
     };
 
-    this.campaignService.createCampaign(request).subscribe({
-      next: () => {
-        this.isSubmitting.set(false);
-        this.router.navigate(['/campaigns']);
-      },
-      error: (err) => {
-        this.isSubmitting.set(false);
-        alert('Error: ' + (err.error?.message || err.message));
-      }
-    });
+    // Check if editing or creating
+    if (this.isEditing()) {
+      // Update existing campaign
+      this.campaignService.updateCampaign(this.editingCampaignId()!, request).subscribe({
+        next: () => {
+          this.isSubmitting.set(false);
+          // Clear editing state
+          this.isEditing.set(false);
+          this.editingCampaignId.set(null);
+          this.router.navigate(['/campaigns']);
+        },
+        error: (err) => {
+          this.isSubmitting.set(false);
+          alert('Error: ' + (err.error?.message || err.message));
+        }
+      });
+    } else {
+      // Create new campaign
+      this.campaignService.createCampaign(request).subscribe({
+        next: () => {
+          this.isSubmitting.set(false);
+          this.router.navigate(['/campaigns']);
+        },
+        error: (err) => {
+          this.isSubmitting.set(false);
+          alert('Error: ' + (err.error?.message || err.message));
+        }
+      });
+    }
+  }
+
+  // Guardar borrador sin enviar
+  saveDraft() {
+    this.submit();
+  }
+
+  // Ir a la ventana de envío
+  goToSend() {
+    const design = this.campaignDesign();
+    const audience = this.selectedAudience();
+    
+    if (!design || !audience) {
+      alert('Por favor completa todos los pasos');
+      return;
+    }
+    
+    // Guardar primero y luego navegar a la página de envío
+    this.isSubmitting.set(true);
+    
+    const htmlContent = design.mode === 'custom-html' 
+      ? (design.customHtml || '') 
+      : this.generateHtmlFromDesign(design);
+    
+    const ownerId = this.authService.currentUser()?.id || '';
+    
+    const request: NewCampaignRequest = {
+      ownerId: ownerId,
+      subject: this.configForm.value.subject,
+      htmlContent: htmlContent,
+      sender: `${this.configForm.value.fromDisplayName} via Mailboom`,
+      recipientListId: audience.id
+    };
+
+    if (this.isEditing()) {
+      this.campaignService.updateCampaign(this.editingCampaignId()!, request).subscribe({
+        next: (campaign) => {
+          this.isSubmitting.set(false);
+          // Navigate to send page with campaign ID
+          this.router.navigate(['/campaigns', campaign.id, 'send']);
+        },
+        error: (err) => {
+          this.isSubmitting.set(false);
+          alert('Error: ' + (err.error?.message || err.message));
+        }
+      });
+    } else {
+      this.campaignService.createCampaign(request).subscribe({
+        next: (campaign) => {
+          this.isSubmitting.set(false);
+          // Navigate to send page with campaign ID
+          this.router.navigate(['/campaigns', campaign.id, 'send']);
+        },
+        error: (err) => {
+          this.isSubmitting.set(false);
+          alert('Error: ' + (err.error?.message || err.message));
+        }
+      });
+    }
   }
 }

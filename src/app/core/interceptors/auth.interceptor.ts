@@ -5,7 +5,11 @@ import { catchError, switchMap, throwError } from 'rxjs';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
-  const token = authService.accessToken();
+  const token = localStorage.getItem('accessToken');
+
+  console.log('Auth Interceptor - Token:', token ? 'Presente' : 'No encontrado');
+  console.log('Auth Interceptor - URL:', req.url);
+  console.log('Auth Interceptor - Method:', req.method);
 
   if (token) {
     req = req.clone({
@@ -13,25 +17,16 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         Authorization: `Bearer ${token}`
       }
     });
+    console.log('Auth Interceptor - Autorization header agregado');
+  } else {
+    console.warn('Auth Interceptor - No hay token, request sin autorización');
   }
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 401 && token) {
-        return authService.refreshToken().pipe(
-          switchMap((newTokens) => {
-            const newReq = req.clone({
-              setHeaders: {
-                Authorization: `Bearer ${newTokens.accessToken}`
-              }
-            });
-            return next(newReq);
-          }),
-          catchError(() => {
-            authService.logout();
-            return throwError(() => error);
-          })
-        );
+      if (error.status === 401) {
+        // Token expirado o inválido
+        authService.logout();
       }
       return throwError(() => error);
     })

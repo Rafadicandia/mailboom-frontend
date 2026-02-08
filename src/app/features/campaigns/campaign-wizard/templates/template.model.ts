@@ -10,6 +10,7 @@ export interface TextStyle {
   align: 'left' | 'center' | 'right';
   bold?: boolean;
   italic?: boolean;
+  underline?: boolean;
 }
 
 export interface HeaderConfig {
@@ -43,11 +44,13 @@ export interface FooterConfig {
 
 export interface ContentBlock {
   id: string;
-  type: 'text' | 'image' | 'button' | 'divider';
+  type: 'text' | 'rich-text' | 'image' | 'button' | 'divider';
   content: string;
   style?: TextStyle;
   url?: string;
   padding: number;
+  // Para rich-text
+  htmlContent?: string;
 }
 
 export interface EmailDesign {

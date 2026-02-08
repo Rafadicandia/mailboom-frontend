@@ -17,18 +17,23 @@ export class AuthService {
 
   private loadUserFromStorage(): User | null {
     const token = localStorage.getItem('accessToken');
+    const userId = localStorage.getItem('userId');
     if (!token) return null;
     
     try {
       const decoded: any = jwtDecode(token);
+      console.log('Token decodificado:', decoded);
       return {
-        id: decoded.sub,
-        email: decoded.email,
-        name: decoded.name,
-        role: decoded.role
+        // userId tiene prioridad si existe
+        id: userId || decoded.id || decoded.sub,
+        email: decoded.email || decoded.sub,
+        name: decoded.name || decoded.username || decoded.firstName || 'Usuario',
+        role: decoded.role || decoded.roles || 'USER'
       };
     } catch (e) {
+      console.error('Error decodificando token:', e);
       localStorage.removeItem('accessToken');
+      localStorage.removeItem('userId');
       return null;
     }
   }
@@ -43,7 +48,10 @@ export class AuthService {
           const token = response.access_token;
           
           localStorage.setItem('accessToken', token);
-          const user = this.decodeToken(token);
+          // user_id viene separado en la respuesta
+          localStorage.setItem('userId', response.user_id);
+          
+          const user = this.decodeToken(token, response.user_id);
           this._currentUser.set(user);
           this.router.navigate(['/dashboard']);
         },
@@ -61,7 +69,10 @@ export class AuthService {
           const token = response.access_token;
           
           localStorage.setItem('accessToken', token);
-          const user = this.decodeToken(token);
+          // user_id viene separado en la respuesta
+          localStorage.setItem('userId', response.user_id);
+          
+          const user = this.decodeToken(token, response.user_id);
           this._currentUser.set(user);
           this.router.navigate(['/dashboard']);
         },
@@ -74,17 +85,20 @@ export class AuthService {
 
   logout() {
     localStorage.removeItem('accessToken');
+    localStorage.removeItem('userId');
     this._currentUser.set(null);
     this.router.navigate(['/login']);
   }
 
-  private decodeToken(token: string): User {
+  private decodeToken(token: string, userId?: string): User {
     const decoded: any = jwtDecode(token);
+    console.log('Token decodificado:', decoded);
     return {
-      id: decoded.sub,
-      email: decoded.email,
-      name: decoded.name,
-      role: decoded.role
+      // user_id tiene prioridad si viene en la respuesta
+      id: userId || decoded.id || decoded.sub,
+      email: decoded.email || decoded.sub,
+      name: decoded.name || decoded.username || decoded.firstName || 'Usuario',
+      role: decoded.role || decoded.roles || 'USER'
     };
   }
 }

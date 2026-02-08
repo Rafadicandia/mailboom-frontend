@@ -43,7 +43,7 @@ import { AuthService } from '../../core/services/auth.service';
               <input type="password" formControlName="password"
                      class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                      placeholder="••••••••">
-              <p class="mt-1 text-xs text-gray-500">Mínimo 6 caracteres</p>
+              <p class="mt-1 text-xs text-gray-500">Mínimo 8 caracteres</p>
             </div>
           </div>
 

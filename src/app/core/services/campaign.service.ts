@@ -8,9 +8,11 @@ export class CampaignService {
   
   private _campaigns = signal<Campaign[]>([]);
   private _loading = signal(false);
+  private _currentCampaign = signal<Campaign | null>(null);
   
   readonly campaigns = computed(() => this._campaigns());
   readonly loading = computed(() => this._loading());
+  readonly currentCampaign = computed(() => this._currentCampaign());
   
   readonly draftCampaigns = computed(() => 
     this._campaigns().filter(c => c.status === 'DRAFT')
@@ -34,11 +36,28 @@ export class CampaignService {
       });
   }
 
+  getCampaign(id: string) {
+    this._loading.set(true);
+    return this.http.get<Campaign>(`${this.API_URL}/${id}`);
+  }
+
   createCampaign(request: NewCampaignRequest) {
     return this.http.post<Campaign>(`${this.API_URL}/new`, request);
   }
 
+  updateCampaign(id: string, request: NewCampaignRequest) {
+    return this.http.put<Campaign>(`${this.API_URL}/${id}/update`, request);
+  }
+
   deleteCampaign(id: string) {
     return this.http.delete(`${this.API_URL}/${id}/delete`);
+  }
+
+  setCurrentCampaign(campaign: Campaign | null) {
+    this._currentCampaign.set(campaign);
+  }
+
+  removeCampaignFromList(campaignId: string) {
+    this._campaigns.update(list => list.filter(c => c.id !== campaignId));
   }
 }
