@@ -21,3 +21,8 @@ export interface NewCampaignRequest {
 }
 
 export interface CampaignDataResponse extends Campaign {}
+
+export interface SendCampaignRequest {
+  campaignId: string;
+  ownerId: string;
+}

@@ -36,6 +36,10 @@ export const routes: Routes = [
         path: 'audiences',
         loadComponent: () => import('./features/audiences/contact-list.component').then(m => m.ContactListComponent)
       },
+      {
+        path: 'profile',
+        loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent)
+      },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   }

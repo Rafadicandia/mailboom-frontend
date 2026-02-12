@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, signal, ChangeDetectorRef } from '@angular/core';
+import { Component, Output, EventEmitter, signal, ChangeDetectorRef, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { EmailDesign, EditorMode, HeaderConfig, FooterConfig, ContentBlock, TextStyle, FontFamily, FontSize } from '../templates/template.model';
@@ -272,7 +272,7 @@ import { QuillEditorComponent } from '../../../../shared/components/quill-editor
                           <div class="flex items-center gap-2">
                             <input type="color" [(ngModel)]="buttonColor" (ngModelChange)="buttonColor = $event; refreshPreview()" 
                                    class="w-8 h-8 rounded cursor-pointer">
-                            <span class="text-xs text-gray-500">{{ buttonColor }}</span>
+                            <span class="text-xs text-gray-500">{{ buttonColor() }}</span>
                           </div>
                         </div>
                         <div>
@@ -280,7 +280,7 @@ import { QuillEditorComponent } from '../../../../shared/components/quill-editor
                           <div class="flex items-center gap-2">
                             <input type="color" [(ngModel)]="buttonTextColor" (ngModelChange)="buttonTextColor = $event; refreshPreview()" 
                                    class="w-8 h-8 rounded cursor-pointer">
-                            <span class="text-xs text-gray-500">{{ buttonTextColor }}</span>
+                            <span class="text-xs text-gray-500">{{ buttonTextColor() }}</span>
                           </div>
                         </div>
                         <div>
@@ -292,9 +292,9 @@ import { QuillEditorComponent } from '../../../../shared/components/quill-editor
                       <!-- Vista previa del botón -->
                       <div class="mt-3 p-4 bg-white rounded border text-center">
                         <a [href]="block.url || '#'" 
-                           [style.background-color]="buttonColor"
-                           [style.color]="buttonTextColor"
-                           [style.border-radius.px]="buttonBorderRadius"
+                           [style.background-color]="buttonColor()"
+                           [style.color]="buttonTextColor()"
+                           [style.border-radius.px]="buttonBorderRadius()"
                            [style.padding.px]="16"
                            [style.padding-inline.px]="32"
                            [style.display]="'inline-block'"
@@ -302,17 +302,17 @@ import { QuillEditorComponent } from '../../../../shared/components/quill-editor
                            [style.font-weight]="'bold'"
                            [style.font-size]="'16px'"
                            target="_blank">
-                          {{ block.content || 'Click aquí' }}
+                           {{ block.content || 'Click aquí' }}
                         </a>
                       </div>
                     </div>
                   } @else if (block.type === 'divider') {
                     <div class="mt-4 py-2">
-                      <hr [style.border-color]="dividerColor" class="my-4 border-2">
+                      <hr [style.border-color]="dividerColor()" class="my-4 border-2">
                       <div class="flex items-center gap-2">
                         <label class="text-xs text-gray-500">Color línea:</label>
                         <input type="color" [(ngModel)]="dividerColor" (ngModelChange)="dividerColor = $event; refreshPreview()" class="w-8 h-8 rounded cursor-pointer">
-                        <span class="text-xs text-gray-500">{{ dividerColor }}</span>
+                        <span class="text-xs text-gray-500">{{ dividerColor() }}</span>
                       </div>
                     </div>
                   }
@@ -438,7 +438,9 @@ import { QuillEditorComponent } from '../../../../shared/components/quill-editor
     }
   `]
 })
-export class DesignStepComponent {
+export class DesignStepComponent implements OnInit, OnChanges {
+  @Input() initialDesign?: EmailDesign | null;
+  
   mode = signal<EditorMode>('template');
   htmlViewMode = signal<'code' | 'preview'>('code');
   showHeaderConfig = signal(true);
@@ -496,7 +498,85 @@ export class DesignStepComponent {
   @Output() onBack = new EventEmitter<void>();
 
   constructor(private cdr: ChangeDetectorRef) {
-    this.addBlock('text');
+    // Si hay un diseño inicial, usarlo; sino agregar un bloque de texto por defecto
+    try {
+      if (this.initialDesign) {
+        this.applyInitialDesign();
+      } else {
+        this.addBlock('text');
+      }
+    } catch (e) {
+      console.error('Error initializing design:', e);
+      this.addBlock('text');
+    }
+  }
+
+  ngOnInit() {}
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['initialDesign']) {
+      try {
+        if (this.initialDesign) {
+          this.applyInitialDesign();
+        }
+      } catch (e) {
+        console.error('Error applying design changes:', e);
+      }
+    }
+  }
+
+  applyInitialDesign() {
+    if (!this.initialDesign) return;
+    
+    const design = this.initialDesign;
+    
+    // Aplicar el modo
+    this.mode.set(design.mode || 'template');
+    
+    // Aplicar configuración global
+    this.design.backgroundColor = design.backgroundColor || '#ffffff';
+    this.design.contentMaxWidth = design.contentMaxWidth || 600;
+    
+    // Aplicar header de forma segura
+    if (design.header) {
+      this.design.header = {
+        enabled: design.header.enabled ?? false,
+        backgroundColor: design.header.backgroundColor || '#ffffff',
+        textColor: design.header.textColor || '#000000',
+        text: design.header.text || '',
+        height: design.header.height || 60,
+        useImage: design.header.useImage ?? false,
+        imageUrl: design.header.imageUrl || ''
+      };
+    }
+    
+    // Aplicar contenido
+    this.design.content = design.content ? [...design.content] : [];
+    
+    // Aplicar footer de forma segura
+    if (design.footer) {
+      this.design.footer = {
+        enabled: design.footer.enabled ?? false,
+        backgroundColor: design.footer.backgroundColor || '#f3f4f6',
+        textColor: design.footer.textColor || '#6b7280',
+        companyName: design.footer.companyName || '',
+        address: design.footer.address || '',
+        phone: design.footer.phone || '',
+        email: design.footer.email || '',
+        website: design.footer.website || '',
+        socialLinks: design.footer.socialLinks || {},
+        customText: design.footer.customText || '',
+        showUnsubscribe: design.footer.showUnsubscribe ?? false
+      };
+    }
+    
+    // Si es modo HTML personalizado, aplicar el customHtml
+    if (design.mode === 'custom-html' && design.customHtml) {
+      this.customHtml.set(design.customHtml);
+    }
+    
+    // Refrescar vista previa
+    this.refreshPreview();
   }
 
   onModeChange() {

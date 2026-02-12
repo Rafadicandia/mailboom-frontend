@@ -166,7 +166,7 @@ import { Campaign } from '../../core/models/campaign.model';
                   </div>
                   <div>
                     <p class="font-medium text-gray-900">{{ list.name }}</p>
-                    <p class="text-sm text-gray-500">{{ list.contactCount }} contactos</p>
+                    <p class="text-sm text-gray-500">{{ getContactCount(list.id) }} contactos</p>
                   </div>
                 </div>
                 <a routerLink="/campaigns/new" [queryParams]="{listId: list.id}"
@@ -203,6 +203,7 @@ export class DashboardComponent implements OnInit {
   private authService = inject(AuthService);
 
   contactLists = this.contactService.contactLists;
+  contactsCountByList = this.contactService.contactsCountByList;
   campaigns = this.campaignService.campaigns;
   draftCampaigns = this.campaignService.draftCampaigns;
 
@@ -236,5 +237,15 @@ export class DashboardComponent implements OnInit {
       'CANCELLED': 'Cancelada'
     };
     return statusMap[status] || status;
+  }
+
+  getContactCount(listId: string): number {
+    // Fallback: usar totalContacts del backend o contar desde contactos cargados
+    const list = this.contactLists().find(l => l.id === listId);
+    if (list && list.totalContacts > 0) {
+      return list.totalContacts;
+    }
+    // Fallback: contar desde los contactos cargados
+    return this.contactsCountByList()[listId] || 0;
   }
 }

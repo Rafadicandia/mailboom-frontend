@@ -1,10 +1,9 @@
-import { Component, signal, OnInit, inject } from '@angular/core';
+import { Component, signal, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CampaignService } from '../../../core/services/campaign.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { businessValidators } from '../../../shared/validators/business.validators';
 import { EmailDesign } from './templates/template.model';
 import { DesignStepComponent } from './steps/design-step.component';
 import { AudienceStepComponent } from './steps/audience-step.component';
@@ -13,6 +12,20 @@ import { ContactList } from '../../../core/models/contact.model';
 import { ContactService } from '../../../core/services/contact.service';
 
 type WizardStep = 0 | 1 | 2 | 3;
+
+// Subject validators
+const subjectValidators = [
+  Validators.required,
+  Validators.maxLength(150),
+  Validators.pattern(/^[^\n]*$/)
+];
+
+// From display name validators
+const fromDisplayNameValidators = [
+  Validators.required,
+  Validators.minLength(2),
+  Validators.maxLength(50)
+];
 
 @Component({
   selector: 'app-campaign-wizard',
@@ -73,17 +86,17 @@ type WizardStep = 0 | 1 | 2 | 3;
                      maxlength="150">
               <div class="flex justify-between text-xs">
                 <span class="text-gray-500">{{ configForm.get('subject')?.value?.length || 0 }}/150</span>
-                @if (configForm.get('subject')?.hasError('consecutiveUppercase')) {
-                  <span class="text-red-600">⚠️ Evita MAYÚSCULAS excesivas</span>
-                }
               </div>
             </div>
 
             <div class="space-y-2">
               <label class="block text-sm font-medium text-gray-700">Nombre del Remitente <span class="text-red-500">*</span></label>
               <div class="relative">
-                <input type="text" formControlName="fromDisplayName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 pr-32">
-                <span class="absolute right-3 top-2 text-gray-400 text-sm">via Mailboom</span>
+                <input type="text" formControlName="fromDisplayName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 pr-36">
+                <span class="absolute right-3 top-2 text-gray-400 text-sm bg-white pl-2">&#64;mailboom.email</span>
+              </div>
+              <div class="flex justify-between text-xs">
+                <span class="text-gray-500">{{ configForm.get('fromDisplayName')?.value?.length || 0 }}/36</span>
               </div>
             </div>
 
@@ -99,6 +112,7 @@ type WizardStep = 0 | 1 | 2 | 3;
         <!-- PASO 2: DISEÑO -->
         @if (currentStep() === 1) {
           <app-design-step 
+            [initialDesign]="campaignDesign()"
             (onNext)="onDesignComplete($event)"
             (onBack)="prevStep()">
           </app-design-step>
@@ -124,7 +138,7 @@ type WizardStep = 0 | 1 | 2 | 3;
 
             <div class="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
               <p><span class="text-gray-600">Asunto:</span> <span class="font-medium">{{ configForm.value.subject }}</span></p>
-              <p><span class="text-gray-600">Remitente:</span> <span class="font-medium">{{ configForm.value.fromDisplayName }} via Mailboom</span></p>
+              <p><span class="text-gray-600">Remitente:</span> <span class="font-medium">{{ configForm.value.fromDisplayName }}&#64;mailboom.email</span></p>
               <p><span class="text-gray-600">Modo:</span> <span class="font-medium">{{ campaignDesign()?.mode === 'custom-html' ? 'HTML personalizado' : 'Diseñador visual' }}</span></p>
               @if (selectedAudience()) {
                 <p class="flex items-center gap-2">
@@ -133,7 +147,12 @@ type WizardStep = 0 | 1 | 2 | 3;
                     <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
-                    {{ selectedAudience()?.name }} ({{ selectedAudience()?.contactCount }} contactos)
+                    {{ selectedAudience()?.name }} 
+                    @if (selectedAudience()?.totalContacts && selectedAudience()?.totalContacts! > 0) {
+                      ({{ selectedAudience()?.totalContacts }} contactos)
+                    } @else {
+                      <span class="text-yellow-600 text-sm">(contactos: verificar)</span>
+                    }
                   </span>
                 </p>
               }
@@ -168,6 +187,14 @@ type WizardStep = 0 | 1 | 2 | 3;
   `
 })
 export class CampaignWizardComponent implements OnInit {
+  private readonly fb = inject(FormBuilder);
+  private readonly campaignService = inject(CampaignService);
+  private readonly contactService = inject(ContactService);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly cdr = inject(ChangeDetectorRef);
+
   currentStep = signal<WizardStep>(0);
   stepLabels = ['Configuración', 'Diseño', 'Audiencia', 'Revisión'];
   campaignDesign = signal<EmailDesign | null>(null);
@@ -175,22 +202,11 @@ export class CampaignWizardComponent implements OnInit {
   isSubmitting = signal(false);
   isEditing = signal(false);
   editingCampaignId = signal<string | null>(null);
-  
-  configForm: FormGroup;
 
-  constructor(
-    private fb: FormBuilder,
-    private campaignService: CampaignService,
-    private contactService: ContactService,
-    private authService: AuthService,
-    private router: Router,
-    private route: ActivatedRoute
-  ) {
-    this.configForm = this.fb.group({
-      subject: ['', businessValidators.subject],
-      fromDisplayName: ['', businessValidators.fromDisplayName]
-    });
-  }
+  configForm: FormGroup = this.fb.group({
+    subject: ['', subjectValidators],
+    fromDisplayName: ['', [...fromDisplayNameValidators, Validators.maxLength(36)]]
+  });
 
   ngOnInit() {
     // Check for edit mode
@@ -216,17 +232,21 @@ export class CampaignWizardComponent implements OnInit {
       next: (campaign) => {
         console.log('Campaign loaded for edit:', campaign);
         
-        // Populate form
-        this.configForm.patchValue({
+        // Populate form with proper validation reset
+        this.configForm.reset({
           subject: campaign.subject,
-          fromDisplayName: campaign.sender.replace(' via Mailboom', '')
+          fromDisplayName: campaign.sender.replace(/@.*$/, '')
         });
         
+        // Mark fields as touched to show validation state
+        this.configForm.get('subject')?.markAsTouched();
+        this.configForm.get('fromDisplayName')?.markAsTouched();
+        
         // Load design from HTML
-        this.campaignDesign.set({
+        const design: EmailDesign = {
           mode: 'custom-html',
           content: [],
-          customHtml: campaign.htmlContent,
+          customHtml: campaign.htmlContent || '',
           backgroundColor: '#ffffff',
           contentMaxWidth: 600,
           header: { enabled: false, backgroundColor: '#ffffff', textColor: '#000000', text: '', height: 60, useImage: false, imageUrl: '' },
@@ -243,13 +263,26 @@ export class CampaignWizardComponent implements OnInit {
             customText: '', 
             showUnsubscribe: false 
           }
-        });
+        };
+        this.campaignDesign.set(design);
         
-        // Load audience - first try, then reload if needed
-        this.loadAudienceForEdit(campaign.recipientListId);
+        // Load audience - ensure lists are loaded first
+        const userId = this.authService.currentUser()?.id;
+        if (userId) {
+          this.contactService.loadUserContactLists(userId);
+          // Try to set audience after loading with a delay
+          setTimeout(() => {
+            this.loadAudienceForEdit(campaign.recipientListId);
+          }, 500);
+        } else {
+          this.loadAudienceForEdit(campaign.recipientListId);
+        }
         
         // Start at step 0 to allow viewing all steps
         this.currentStep.set(0);
+        
+        // Force change detection to update the template
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error loading campaign:', err);
@@ -333,7 +366,11 @@ export class CampaignWizardComponent implements OnInit {
     const lists = this.contactService.contactLists();
     const list = lists.find(l => l.id === listId);
     if (list) {
+      console.log('onListSelected - Lista encontrada:', list);
       this.selectedAudience.set(list);
+    } else {
+      console.warn('onListSelected - Lista no encontrada para id:', listId);
+      console.log('Listas disponibles:', lists);
     }
   }
 
@@ -446,19 +483,21 @@ export class CampaignWizardComponent implements OnInit {
       ownerId: ownerId,
       subject: this.configForm.value.subject,
       htmlContent: htmlContent,
-      sender: `${this.configForm.value.fromDisplayName} via Mailboom`,
+      sender: this.configForm.value.fromDisplayName,
       recipientListId: audience.id
     };
 
     // Check if editing or creating
     if (this.isEditing()) {
       // Update existing campaign
+      console.log('📤 UPDATE CAMPAIGN (SAVE DRAFT) - Request:', JSON.stringify(request, null, 2));
       this.campaignService.updateCampaign(this.editingCampaignId()!, request).subscribe({
         next: () => {
           this.isSubmitting.set(false);
           // Clear editing state
           this.isEditing.set(false);
           this.editingCampaignId.set(null);
+          // Navegar a la lista de campañas
           this.router.navigate(['/campaigns']);
         },
         error: (err) => {
@@ -468,9 +507,11 @@ export class CampaignWizardComponent implements OnInit {
       });
     } else {
       // Create new campaign
+      console.log('📤 SAVE NEW CAMPAIGN - Request:', JSON.stringify(request, null, 2));
       this.campaignService.createCampaign(request).subscribe({
         next: () => {
           this.isSubmitting.set(false);
+          // Navegar a la lista de campañas
           this.router.navigate(['/campaigns']);
         },
         error: (err) => {
@@ -486,17 +527,51 @@ export class CampaignWizardComponent implements OnInit {
     this.submit();
   }
 
-  // Ir a la ventana de envío
+  // Recargar campañas después de crear/actualizar
+  loadCampaignsAfterSubmit() {
+    const userId = this.authService.currentUser()?.id;
+    if (userId) {
+      this.campaignService.loadUserCampaigns(userId);
+    }
+  }
+
+  // Ir a la ventana de envío - llama directamente al endpoint de envío
   goToSend() {
     const design = this.campaignDesign();
     const audience = this.selectedAudience();
     
-    if (!design || !audience) {
-      alert('Por favor completa todos los pasos');
+    // Validar que todos los datos estén completos
+    if (!design) {
+      alert('Por favor completa el diseño de la campaña');
+      return;
+    }
+    if (!audience || !audience.id) {
+      alert('Por favor selecciona una audiencia');
+      return;
+    }
+    if (!this.configForm.value.subject) {
+      alert('Por favor ingresa un asunto para la campaña');
       return;
     }
     
-    // Guardar primero y luego navegar a la página de envío
+    // Cargar contactos de la lista y obtener el conteo
+    this.isSubmitting.set(true);
+    this.contactService.getContactsFromList(audience.id);
+    
+    // Pequeña espera para que se carguen los contactos
+    setTimeout(() => {
+      const contactCount = this.contactService.getContactCount(audience.id);
+      this.isSubmitting.set(false);
+      
+      // Confirmar envío
+      if (confirm(`¿Estás seguro de enviar la campaña "${this.configForm.value.subject}" a ${contactCount} contactos?`)) {
+        // Proceder con el envío
+        this.executeSendCampaign(design, audience);
+      }
+    }, 300);
+  }
+
+  executeSendCampaign(design: EmailDesign, audience: ContactList) {
     this.isSubmitting.set(true);
     
     const htmlContent = design.mode === 'custom-html' 
@@ -509,16 +584,27 @@ export class CampaignWizardComponent implements OnInit {
       ownerId: ownerId,
       subject: this.configForm.value.subject,
       htmlContent: htmlContent,
-      sender: `${this.configForm.value.fromDisplayName} via Mailboom`,
+      sender: `${this.configForm.value.fromDisplayName}`,
       recipientListId: audience.id
     };
 
     if (this.isEditing()) {
+      // Modo edición - primero actualizar, luego enviar
+      console.log('📤 SAVE NEW CAMPAIGN (EDIT MODE) - Request:', JSON.stringify(request, null, 2));
       this.campaignService.updateCampaign(this.editingCampaignId()!, request).subscribe({
         next: (campaign) => {
-          this.isSubmitting.set(false);
-          // Navigate to send page with campaign ID
-          this.router.navigate(['/campaigns', campaign.id, 'send']);
+          console.log('🚀 SEND CAMPAIGN - campaignId:', campaign.id, ', ownerId:', ownerId);
+          this.campaignService.sendCampaign(campaign.id, ownerId).subscribe({
+            next: () => {
+              this.isSubmitting.set(false);
+              alert('✅ Campaña enviada exitosamente');
+              this.router.navigate(['/campaigns']);
+            },
+            error: (err) => {
+              this.isSubmitting.set(false);
+              alert('Error al enviar: ' + (err.error?.message || err.message));
+            }
+          });
         },
         error: (err) => {
           this.isSubmitting.set(false);
@@ -526,11 +612,22 @@ export class CampaignWizardComponent implements OnInit {
         }
       });
     } else {
+      // Modo nueva campaña - primero crear, luego enviar
+      console.log('📤 SAVE NEW CAMPAIGN (SEND MODE) - Request:', JSON.stringify(request, null, 2));
       this.campaignService.createCampaign(request).subscribe({
         next: (campaign) => {
-          this.isSubmitting.set(false);
-          // Navigate to send page with campaign ID
-          this.router.navigate(['/campaigns', campaign.id, 'send']);
+          console.log('🚀 SEND CAMPAIGN - campaignId:', campaign.id, ', ownerId:', ownerId);
+          this.campaignService.sendCampaign(campaign.id, ownerId).subscribe({
+            next: () => {
+              this.isSubmitting.set(false);
+              alert('✅ Campaña enviada exitosamente');
+              this.router.navigate(['/campaigns']);
+            },
+            error: (err) => {
+              this.isSubmitting.set(false);
+              alert('Error al enviar: ' + (err.error?.message || err.message));
+            }
+          });
         },
         error: (err) => {
           this.isSubmitting.set(false);

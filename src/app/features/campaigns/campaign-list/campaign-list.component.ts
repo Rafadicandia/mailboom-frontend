@@ -97,27 +97,42 @@ import { Campaign } from '../../../core/models/campaign.model';
                         [class.text-blue-800]="campaign.status === 'SENDING'">
                     {{ getStatusText(campaign.status) }}
                   </span>
+                  
+                  <!-- Botón Editar - disponible para todas las campañas -->
+                  <button (click)="editCampaign(campaign)"
+                          class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm flex items-center gap-1 transition-colors"
+                          title="Editar campaña">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    Editar
+                  </button>
+                  
+                  <!-- Botón Preview - disponible para todas las campañas -->
+                  <button (click)="previewCampaign(campaign)"
+                          class="px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm flex items-center gap-1 transition-colors"
+                          title="Ver previsualización">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    Ver
+                  </button>
+                  
+                  <!-- Botón Enviar - disponible para borradores -->
                   @if (campaign.status === 'DRAFT') {
-                    <button (click)="editCampaign(campaign)"
-                            class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
-                            title="Editar borrador">
-                      <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    <button (click)="sendCampaign(campaign)"
+                            class="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm flex items-center gap-1 transition-colors"
+                            title="Enviar campaña">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                       </svg>
-                      Editar
-                    </button>
-                    <button (click)="previewCampaign(campaign)"
-                            class="px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm"
-                            title="Ver previsualización">
-                      <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                      </svg>
-                      Preview
+                      Enviar
                     </button>
                   }
+                  
                   <button (click)="deleteCampaign(campaign)"
-                          class="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg"
+                          class="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
                           title="Eliminar">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -130,25 +145,28 @@ import { Campaign } from '../../../core/models/campaign.model';
         </div>
       }
 
-      <!-- Modal de Previsualización -->
+      <!-- Modal de Previsualización con diseño consistente -->
       @if (showPreview()) {
         <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" (click)="closePreview()">
-          <div class="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-auto" (click)="$event.stopPropagation()">
-            <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-semibold">Previsualización: {{ previewCampaignData()?.subject }}</h3>
-              <button (click)="closePreview()" class="text-gray-500 hover:text-gray-700">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden" (click)="$event.stopPropagation()">
+            <div class="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900">Previsualización</h3>
+                <p class="text-sm text-gray-500">{{ previewCampaignData()?.subject }}</p>
+              </div>
+              <button (click)="closePreview()" class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-lg transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
               </button>
             </div>
-            <div class="border border-gray-200 rounded-lg overflow-hidden">
+            <div class="border border-gray-200 rounded-lg m-4 overflow-hidden">
               <iframe [srcdoc]="previewCampaignData()?.htmlContent" 
                       class="w-full h-96 border-0"></iframe>
             </div>
-            <div class="mt-4 flex justify-end">
+            <div class="flex justify-end gap-3 p-4 border-t border-gray-200 bg-gray-50">
               <button (click)="closePreview()"
-                      class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                      class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
                 Cerrar
               </button>
             </div>
@@ -220,5 +238,10 @@ export class CampaignListComponent implements OnInit {
       },
       error: (err: any) => alert(err.error?.message || 'Error al eliminar')
     });
+  }
+
+  sendCampaign(campaign: Campaign) {
+    // Navegar al paso de revisión para enviar la campaña
+    this.editCampaign(campaign);
   }
 }

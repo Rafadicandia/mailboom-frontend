@@ -1,6 +1,11 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { ContactList, Contact, NewContactListRequest, NewContactRequest, UpdateContactRequest, UpdateContactListRequest } from '../models/contact.model';
+import { ContactList, Contact, NewContactListRequest, NewContactRequest, UpdateContactRequest, UpdateContactListRequest, getContactId } from '../models/contact.model';
+
+// Helper function to check if contact matches ID (handles both 'id' and 'contactId')
+function contactMatchesId(contact: Contact, contactId: string): boolean {
+  return getContactId(contact) === contactId;
+}
 
 @Injectable({ providedIn: 'root' })
 export class ContactService {
@@ -13,6 +18,16 @@ export class ContactService {
   readonly contactLists = computed(() => this._contactLists());
   readonly loading = computed(() => this._loading());
   readonly contacts = computed(() => this._contacts());
+  
+  // Computed que cuenta contactos por lista (fallback cuando totalContacts no viene del backend)
+  readonly contactsCountByList = computed(() => {
+    const contacts = this._contacts();
+    const countByList: Record<string, number> = {};
+    contacts.forEach(c => {
+      countByList[c.listId] = (countByList[c.listId] || 0) + 1;
+    });
+    return countByList;
+  });
 
   constructor(private http: HttpClient) {}
 
@@ -38,10 +53,11 @@ export class ContactService {
       .subscribe({
         next: (contacts) => {
           console.log('ContactService: Contactos recibidos del backend:', contacts);
-          // Verify each contact has an ID
+          // Verify each contact has an ID (either 'id' or 'contactId')
           contacts.forEach((c, i) => {
-            if (!c.id) {
-              console.warn(`ContactService: Contacto ${i} sin ID:`, c);
+            const contactId = getContactId(c);
+            if (!contactId) {
+              console.warn(`ContactService: Contacto ${i} sin ID válido:`, c);
             }
           });
           this._contacts.set(contacts);
@@ -104,7 +120,7 @@ export class ContactService {
     this._contactLists.update(lists => 
       lists.map(l => 
         l.id === newContact.listId 
-          ? { ...l, contactCount: l.contactCount + 1 } 
+          ? { ...l, totalContacts: l.totalContacts + 1 } 
           : l
       )
     );
@@ -119,14 +135,21 @@ export class ContactService {
 
   // Remove contact from signal
   removeContactFromSignal(contactId: string, listId: string) {
+    console.log('ContactService.removeContactFromSignal: Eliminando contacto con ID:', contactId);
+    const beforeCount = this._contacts().length;
+    
     this._contacts.update(contacts => 
-      contacts.filter(c => c.id !== contactId)
+      contacts.filter(c => !contactMatchesId(c, contactId))
     );
+    
+    const afterCount = this._contacts().length;
+    console.log(`ContactService: Contactos antes: ${beforeCount}, después: ${afterCount}`);
+    
     // Update contact count in list
     this._contactLists.update(lists => 
       lists.map(l => 
         l.id === listId 
-          ? { ...l, contactCount: Math.max(0, l.contactCount - 1) } 
+          ? { ...l, totalContacts: Math.max(0, l.totalContacts - 1) } 
           : l
       )
     );
@@ -134,5 +157,11 @@ export class ContactService {
 
   clearContacts() {
     this._contacts.set([]);
+  }
+
+  // Obtener el conteo de contactos de una lista
+  getContactCount(listId: string): number {
+    const contacts = this._contacts().filter(c => c.listId === listId);
+    return contacts.length;
   }
 }

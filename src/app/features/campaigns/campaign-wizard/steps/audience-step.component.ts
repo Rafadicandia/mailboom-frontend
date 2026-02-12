@@ -32,9 +32,9 @@ import { ContactList } from '../../../../core/models/contact.model';
                      class="w-4 h-4 text-indigo-600">
               <div class="ml-3 flex-1">
                 <p class="font-medium text-gray-900">{{ list.name }}</p>
-                <p class="text-sm text-gray-500">{{ list.contactCount }} contactos</p>
+                <p class="text-sm text-gray-500">{{ getContactCount(list) }} contactos</p>
               </div>
-              @if (list.contactCount === 0) {
+              @if (getContactCount(list) === 0) {
                 <span class="text-xs text-yellow-600 bg-yellow-100 px-2 py-1 rounded">Vacía</span>
               }
             </label>
@@ -299,5 +299,17 @@ export class AudienceStepComponent implements OnInit {
     if (listId) {
       this.onNext.emit(listId);
     }
+  }
+
+  getContactCount(list: ContactList): number {
+    // Mostrar el número real de contactos
+    // Si totalContacts viene del backend, usarlo directamente
+    // Si no, intentar contar desde los contactos cargados
+    if (list.totalContacts !== undefined && list.totalContacts > 0) {
+      return list.totalContacts;
+    }
+    // Fallback: contar desde los contactos cargados
+    const count = this.contactService.contactsCountByList()[list.id];
+    return count || 0;
   }
 }

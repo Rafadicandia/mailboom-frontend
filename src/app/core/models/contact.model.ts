@@ -17,9 +17,14 @@ export interface ContactList {
   id: string;
   name: string;
   ownerId: string;
-  contactCount: number;
+  totalContacts: number;
   createdAt?: Date;
   contacts?: Contact[];
+}
+
+// Computed property for backwards compatibility
+export function getContactCount(list: ContactList): number {
+  return list.totalContacts;
 }
 
 export interface NewContactListRequest {
