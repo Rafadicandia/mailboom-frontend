@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { ContactService } from '../../core/services/contact.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ContactList, Contact, getContactId } from '../../core/models/contact.model';
@@ -403,6 +404,8 @@ import { ContactList, Contact, getContactId } from '../../core/models/contact.mo
 export class ContactListComponent implements OnInit {
   private contactService = inject(ContactService);
   private authService = inject(AuthService);
+  private http = inject(HttpClient);
+  private readonly API_URL = '/api/contacts';
 
   contactLists = this.contactService.contactLists;
   contacts = this.contactService.contacts;
@@ -694,17 +697,36 @@ export class ContactListComponent implements OnInit {
     this.isImporting.set(true);
     this.importError.set('');
 
-    // Aquí se implementaría la lógica de importación
-    // Por ahora simulamos una carga exitosa
-    console.log('Importando archivo:', this.selectedFile.name, 'a la lista:', this.selectedImportListId);
-    
-    // Simular tiempo de carga
-    setTimeout(() => {
+    const ownerId = this.authService.currentUser()?.id;
+    if (!ownerId) {
+      this.importError.set('Error: Usuario no autenticado');
       this.isImporting.set(false);
-      this.importSuccess.set(true);
-      // Recargar contactos de la lista
-      this.loadContacts(this.selectedImportListId);
-    }, 2000);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('listId', this.selectedImportListId);
+    formData.append('ownerId', ownerId);
+    formData.append('file', this.selectedFile);
+
+    console.log('Importando archivo:', this.selectedFile.name, 'a la lista:', this.selectedImportListId);
+
+    this.http.post<any[]>(`${this.API_URL}/import/file`, formData).subscribe({
+      next: (contacts) => {
+        console.log('Importación exitosa:', contacts.length, 'contactos importados');
+        this.isImporting.set(false);
+        this.importSuccess.set(true);
+        // Recargar contactos de la lista
+        this.loadContacts(this.selectedImportListId);
+        // Recargar listas para actualizar conteo
+        this.loadContactLists();
+      },
+      error: (err) => {
+        console.error('Error importing file:', err);
+        this.isImporting.set(false);
+        this.importError.set(err.error?.message || 'Error al importar el archivo');
+      }
+    });
   }
 
   selectImportList(listId: string) {
