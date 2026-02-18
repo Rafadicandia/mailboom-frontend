@@ -10,9 +10,21 @@ export class CampaignService {
   private _loading = signal(false);
   private _currentCampaign = signal<Campaign | null>(null);
   
+  // Información de paginación
+  private _currentPage = signal(0);
+  private _pageSize = signal(10);
+  private _totalElements = signal(0);
+  private _totalPages = signal(0);
+  
   readonly campaigns = computed(() => this._campaigns());
   readonly loading = computed(() => this._loading());
   readonly currentCampaign = computed(() => this._currentCampaign());
+  
+  // Getters para paginación
+  readonly currentPage = computed(() => this._currentPage());
+  readonly pageSize = computed(() => this._pageSize());
+  readonly totalElements = computed(() => this._totalElements());
+  readonly totalPages = computed(() => this._totalPages());
   
   readonly draftCampaigns = computed(() => 
     this._campaigns().filter(c => c.status === 'DRAFT')
@@ -24,15 +36,23 @@ export class CampaignService {
 
   constructor(private http: HttpClient) {}
 
-  loadUserCampaigns(userId: string) {
+  loadUserCampaigns(userId: string, page: number = 0, size: number = 10) {
     this._loading.set(true);
-    console.log('📥 LOADING CAMPAIGNS - userId:', userId);
-    this.http.get<CampaignDataResponse[]>(`${this.API_URL}/user/${userId}`)
+    console.log('📥 LOADING CAMPAIGNS - userId:', userId, 'page:', page, 'size:', size);
+    this.http.get<any>(`${this.API_URL}/user/${userId}`, {
+      params: { page: page.toString(), size: size.toString() }
+    })
       .subscribe({
-        next: (campaigns) => {
-          console.log('📥 CAMPAIGNS LOADED:', campaigns.length, 'campaigns');
-          console.log('📥 CAMPAIGNS DATA:', JSON.stringify(campaigns, null, 2));
+        next: (response) => {
+          console.log('📥 CAMPAIGNS LOADED:', response);
+          // El backend puede devolver un array directo o un objeto Page
+          const campaigns = response.content || response;
           this._campaigns.set(campaigns);
+          // Guardar información de paginación
+          this._currentPage.set(response.number || page);
+          this._pageSize.set(response.size || size);
+          this._totalElements.set(response.totalElements || campaigns.length);
+          this._totalPages.set(response.totalPages || 1);
           this._loading.set(false);
         },
         error: (err) => {

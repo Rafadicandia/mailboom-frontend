@@ -143,9 +143,30 @@ import { Campaign } from '../../../core/models/campaign.model';
             </div>
           }
         </div>
+
+        <!-- Paginación -->
+        @if (campaignService.totalPages() > 1) {
+          <div class="flex justify-center items-center gap-2 mt-6">
+            <button 
+              (click)="changePage(campaignService.currentPage() - 1)" 
+              [disabled]="campaignService.currentPage() === 0"
+              class="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50">
+              Anterior
+            </button>
+            <span class="px-4 py-2 text-gray-600">
+              Página {{ campaignService.currentPage() + 1 }} de {{ campaignService.totalPages() }}
+            </span>
+            <button 
+              (click)="changePage(campaignService.currentPage() + 1)" 
+              [disabled]="campaignService.currentPage() >= campaignService.totalPages() - 1"
+              class="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50">
+              Siguiente
+            </button>
+          </div>
+        }
       }
 
-      <!-- Modal de Previsualización con diseño consistente -->
+      <!-- Modal de Previsualización -->
       @if (showPreview()) {
         <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" (click)="closePreview()">
           <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden" (click)="$event.stopPropagation()">
@@ -177,7 +198,7 @@ import { Campaign } from '../../../core/models/campaign.model';
   `
 })
 export class CampaignListComponent implements OnInit {
-  private campaignService = inject(CampaignService);
+  campaignService = inject(CampaignService);
   private authService = inject(AuthService);
   private router = inject(Router);
 
@@ -193,8 +214,17 @@ export class CampaignListComponent implements OnInit {
 
   loadCampaigns() {
     const userId = this.authService.currentUser()?.id;
+    console.log('📋 CAMPAIGN-LIST - currentUser():', this.authService.currentUser());
+    console.log('📋 CAMPAIGN-LIST - userId:', userId);
     if (userId) {
       this.campaignService.loadUserCampaigns(userId);
+    }
+  }
+
+  changePage(page: number) {
+    const userId = this.authService.currentUser()?.id;
+    if (userId && page >= 0) {
+      this.campaignService.loadUserCampaigns(userId, page, 10);
     }
   }
 

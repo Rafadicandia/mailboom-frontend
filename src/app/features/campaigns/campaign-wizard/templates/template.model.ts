@@ -42,15 +42,32 @@ export interface FooterConfig {
   textColor: string;
 }
 
+export type ContentBlockType = 'text' | 'rich-text' | 'image' | 'button' | 'divider' | 'image-with-caption' | 'columns-row' | 'column-one-third' | 'column-two-thirds';
+
+export interface ColumnConfig {
+  width: 'one-third' | 'two-thirds' | 'full';
+  blocks: ContentBlock[];
+}
+
+export interface CaptionConfig {
+  text: string;
+  style?: TextStyle;
+  position: 'below' | 'above' | 'overlay';
+}
+
 export interface ContentBlock {
   id: string;
-  type: 'text' | 'rich-text' | 'image' | 'button' | 'divider';
+  type: ContentBlockType;
   content: string;
   style?: TextStyle;
   url?: string;
   padding: number;
   // Para rich-text
   htmlContent?: string;
+  // Para imagen con caption
+  caption?: CaptionConfig;
+  // Para columnas
+  columnConfig?: ColumnConfig;
 }
 
 export interface EmailDesign {

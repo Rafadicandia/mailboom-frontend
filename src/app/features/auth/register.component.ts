@@ -45,6 +45,13 @@ import { AuthService } from '../../core/services/auth.service';
                      placeholder="••••••••">
               <p class="mt-1 text-xs text-gray-500">Mínimo 8 caracteres</p>
             </div>
+            <div class="flex items-center">
+              <input type="checkbox" formControlName="isAdmin" 
+                     class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+              <label class="ml-2 block text-sm text-gray-900">
+                Registrar como Administrador
+              </label>
+            </div>
           </div>
 
           <button type="submit" [disabled]="registerForm.invalid"
@@ -63,13 +70,19 @@ export class RegisterComponent {
     this.registerForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]]
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      isAdmin: [false]
     });
   }
 
   onSubmit() {
     if (this.registerForm.valid) {
-      this.authService.register(this.registerForm.value);
+      const { isAdmin, ...userData } = this.registerForm.value;
+      if (isAdmin) {
+        this.authService.registerAdmin(userData);
+      } else {
+        this.authService.register(userData);
+      }
     }
   }
 }

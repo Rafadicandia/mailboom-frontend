@@ -213,6 +213,8 @@ export class DashboardComponent implements OnInit {
 
   loadData() {
     const userId = this.authService.currentUser()?.id;
+    console.log('📊 DASHBOARD - currentUser():', this.authService.currentUser());
+    console.log('📊 DASHBOARD - userId:', userId);
     if (userId) {
       this.contactService.loadUserContactLists(userId);
       this.campaignService.loadUserCampaigns(userId);

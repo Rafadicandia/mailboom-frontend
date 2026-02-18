@@ -15,9 +15,21 @@ export class ContactService {
   private _loading = signal(false);
   private _contacts = signal<Contact[]>([]);
   
+  // Información de paginación
+  private _currentPage = signal(0);
+  private _pageSize = signal(10);
+  private _totalElements = signal(0);
+  private _totalPages = signal(0);
+  
   readonly contactLists = computed(() => this._contactLists());
   readonly loading = computed(() => this._loading());
   readonly contacts = computed(() => this._contacts());
+  
+  // Getters para paginación
+  readonly currentPage = computed(() => this._currentPage());
+  readonly pageSize = computed(() => this._pageSize());
+  readonly totalElements = computed(() => this._totalElements());
+  readonly totalPages = computed(() => this._totalPages());
   
   // Computed que cuenta contactos por lista (fallback cuando totalContacts no viene del backend)
   readonly contactsCountByList = computed(() => {
@@ -31,15 +43,38 @@ export class ContactService {
 
   constructor(private http: HttpClient) {}
 
-  loadUserContactLists(userId: string) {
+  loadUserContactLists(userId: string, page: number = 0, size: number = 10) {
     this._loading.set(true);
-    this.http.get<ContactList[]>(`${this.API_URL}/list/user/${userId}`)
+    console.log('👥 ContactService - loadUserContactLists - userId:', userId, 'page:', page, 'size:', size);
+    this.http.get<any>(`${this.API_URL}/list/user/${userId}`, {
+      params: { page: page.toString(), size: size.toString() }
+    })
       .subscribe({
-        next: (lists) => {
-          this._contactLists.set(lists);
+        next: (response) => {
+          console.log('👥 ContactService - loadUserContactLists - response:', response);
+          // El backend devuelve un Page, los datos están en content
+          const lists = response.content || response;
+          console.log('👥 ContactService - listas raw:', JSON.stringify(lists));
+          // Asegurar que cada lista tenga totalContacts definido
+          const processedLists = lists.map((list: any) => {
+            console.log('👥 ContactService - lista individual:', list);
+            return {
+              ...list,
+              totalContacts: list.totalContacts || 0
+            };
+          });
+          this._contactLists.set(processedLists);
+          // Guardar información de paginación
+          this._currentPage.set(response.number || page);
+          this._pageSize.set(response.size || size);
+          this._totalElements.set(response.totalElements || lists.length);
+          this._totalPages.set(response.totalPages || 1);
           this._loading.set(false);
         },
-        error: () => this._loading.set(false)
+        error: (err) => {
+          console.error('👥 ContactService - loadUserContactLists - error:', err);
+          this._loading.set(false);
+        }
       });
   }
 
@@ -49,12 +84,16 @@ export class ContactService {
 
   getContactsFromList(listId: string) {
     this._loading.set(true);
-    this.http.get<Contact[]>(`${this.API_URL}/list/${listId}/contacts`)
+    console.log('👥 ContactService - getContactsFromList - listId:', listId);
+    this.http.get<any>(`${this.API_URL}/list/${listId}/contacts`)
       .subscribe({
-        next: (contacts) => {
-          console.log('ContactService: Contactos recibidos del backend:', contacts);
+        next: (response) => {
+          console.log('👥 ContactService - getContactsFromList - response:', response);
+          // El backend devuelve un Page, los datos están en content
+          const contacts = response.content || response;
+          console.log('👥 ContactService - Contactos recibidos:', contacts);
           // Verify each contact has an ID (either 'id' or 'contactId')
-          contacts.forEach((c, i) => {
+          contacts.forEach((c: any, i: number) => {
             const contactId = getContactId(c);
             if (!contactId) {
               console.warn(`ContactService: Contacto ${i} sin ID válido:`, c);
@@ -86,8 +125,15 @@ export class ContactService {
     return this.http.post<Contact>(`${this.API_URL}/new`, request);
   }
 
-  updateContact(id: string, request: UpdateContactRequest) {
-    return this.http.put<Contact>(`${this.API_URL}/${id}/update`, request);
+  updateContact(id: string, listId: string, request: UpdateContactRequest) {
+    return this.http.put<Contact>(`${this.API_URL}/${id}/update`, {
+      contactId: id,
+      contactListId: listId,
+      email: request.email,
+      name: request.name,
+      customFields: request.customFields,
+      subscribed: request.subscribed
+    });
   }
 
   deleteContact(id: string) {
@@ -96,13 +142,13 @@ export class ContactService {
 
   // Add new list to signal after creation
   addContactListToSignal(newList: ContactList) {
-    this._contactLists.update(lists => [...lists, newList]);
+    this._contactLists.update(lists => [...lists, { ...newList, totalContacts: newList.totalContacts || 0 }]);
   }
 
   // Update list in signal
   updateContactListInSignal(updatedList: ContactList) {
     this._contactLists.update(lists => 
-      lists.map(l => l.id === updatedList.id ? updatedList : l)
+      lists.map(l => l.id === updatedList.id ? { ...updatedList, totalContacts: updatedList.totalContacts || 0 } : l)
     );
   }
 
@@ -126,10 +172,31 @@ export class ContactService {
     );
   }
 
+  // Add multiple contacts to signal (for batch import)
+  addContactsToSignal(newContacts: Contact[]) {
+    this._contacts.update(contacts => [...contacts, ...newContacts]);
+    // Update contact counts by list
+    const countByList: Record<string, number> = {};
+    newContacts.forEach(c => {
+      countByList[c.listId] = (countByList[c.listId] || 0) + 1;
+    });
+    this._contactLists.update(lists => 
+      lists.map(l => 
+        countByList[l.id] 
+          ? { ...l, totalContacts: l.totalContacts + countByList[l.id] } 
+          : l
+      )
+    );
+  }
+
   // Update contact in signal
   updateContactInSignal(updatedContact: Contact) {
+    const updatedId = updatedContact.id || updatedContact.contactId;
     this._contacts.update(contacts => 
-      contacts.map(c => c.id === updatedContact.id ? updatedContact : c)
+      contacts.map(c => {
+        const contactId = c.id || c.contactId;
+        return contactId === updatedId ? updatedContact : c;
+      })
     );
   }
 

@@ -2,10 +2,18 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
 import { ContactService } from '../../core/services/contact.service';
 import { AuthService } from '../../core/services/auth.service';
+import { ImportService } from '../../core/services/import.service';
 import { ContactList, Contact, getContactId } from '../../core/models/contact.model';
+import Papa from 'papaparse';
+import * as XLSX from 'xlsx';
+
+interface ParsedContact {
+  email: string;
+  name?: string;
+  [key: string]: any;
+}
 
 @Component({
   selector: 'app-contact-list',
@@ -18,8 +26,7 @@ import { ContactList, Contact, getContactId } from '../../core/models/contact.mo
           <h2 class="text-2xl font-bold text-gray-900">Audiencias</h2>
           <p class="text-gray-600">Gestiona tus listas de contactos</p>
         </div>
-        <div class="flex gap-3">
-          <!-- Botón importar CSV/Excel -->
+        <div class="flex gap-2">
           <button (click)="openImportModal()"
                   class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -58,11 +65,9 @@ import { ContactList, Contact, getContactId } from '../../core/models/contact.mo
           </button>
         </div>
       } @else {
-        <!-- Lista de audiencias -->
         <div class="space-y-4">
           @for (list of contactLists(); track list.id) {
             <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-              <!-- Header de la lista -->
               <div class="p-4 bg-gray-50 flex items-center justify-between">
                 <div class="flex items-center gap-4">
                   <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
@@ -101,10 +106,8 @@ import { ContactList, Contact, getContactId } from '../../core/models/contact.mo
                 </div>
               </div>
 
-              <!-- Contactos de la lista (si está expandida) -->
               @if (expandedListId() === list.id) {
                 <div class="border-t border-gray-200 p-4">
-                  <!-- Buscador y agregar contacto -->
                   <div class="flex flex-col sm:flex-row gap-4 mb-4">
                     <div class="relative flex-1">
                       <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,7 +127,6 @@ import { ContactList, Contact, getContactId } from '../../core/models/contact.mo
                     </button>
                   </div>
 
-                  <!-- Lista de contactos -->
                   @if (isLoadingContacts()) {
                     <div class="text-center py-8">
                       <svg class="w-6 h-6 animate-spin mx-auto text-indigo-600" fill="none" viewBox="0 0 24 24">
@@ -195,9 +197,30 @@ import { ContactList, Contact, getContactId } from '../../core/models/contact.mo
             </div>
           }
         </div>
+
+        <!-- Paginación -->
+        @if (contactLists().length > 0) {
+          <div class="flex justify-center items-center gap-2 mt-6">
+            <button 
+              (click)="changePage(contactService.currentPage() - 1)" 
+              [disabled]="contactService.currentPage() === 0"
+              class="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50">
+              Anterior
+            </button>
+            <span class="px-4 py-2 text-gray-600">
+              Página {{ contactService.currentPage() + 1 }} de {{ contactService.totalPages() }}
+            </span>
+            <button 
+              (click)="changePage(contactService.currentPage() + 1)" 
+              [disabled]="contactService.currentPage() >= contactService.totalPages() - 1"
+              class="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50">
+              Siguiente
+            </button>
+          </div>
+        }
       }
 
-      <!-- Modal Crear/Editar Lista con diseño consistente -->
+      <!-- Modal Crear/Editar Lista -->
       @if (showListModal()) {
         <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" (click)="closeListModal()">
           <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden" (click)="$event.stopPropagation()">
@@ -246,7 +269,7 @@ import { ContactList, Contact, getContactId } from '../../core/models/contact.mo
         </div>
       }
 
-      <!-- Modal Crear/Editar Contacto con diseño consistente -->
+      <!-- Modal Crear/Editar Contacto -->
       @if (showContactModal()) {
         <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" (click)="closeContactModal()">
           <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden" (click)="$event.stopPropagation()">
@@ -321,6 +344,7 @@ import { ContactList, Contact, getContactId } from '../../core/models/contact.mo
                 </svg>
               </button>
             </div>
+            
             <div class="p-4 space-y-4">
               @if (importSuccess()) {
                 <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
@@ -333,41 +357,126 @@ import { ContactList, Contact, getContactId } from '../../core/models/contact.mo
                   <p class="text-green-700 text-sm mt-1">Los contactos han sido importados correctamente.</p>
                 </div>
               } @else {
-                <!-- Selección de archivo -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Archivo CSV o Excel</label>
-                  <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition-colors">
-                    <input type="file" 
-                           (change)="onFileSelected($event)" 
-                           accept=".csv,.xlsx,.xls"
-                           class="hidden" 
-                           id="file-upload">
-                    <label for="file-upload" class="cursor-pointer">
-                      <svg class="w-10 h-10 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                      </svg>
-                      <p class="text-gray-600">
-                        @if (selectedFile) {
-                          {{ selectedFile.name }}
-                        } @else {
-                          Haz clic para seleccionar un archivo
-                        }
-                      </p>
-                      <p class="text-gray-400 text-sm mt-1">Archivos soportados: CSV, Excel (.xlsx, .xls)</p>
-                    </label>
+                @if (!isFileValid()) {
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Archivo CSV o Excel</label>
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition-colors">
+                      <input type="file" 
+                             (change)="onFileSelected($event)" 
+                             accept=".csv,.xlsx,.xls"
+                             class="hidden" 
+                             id="file-upload">
+                      <label for="file-upload" class="cursor-pointer">
+                        <svg class="w-10 h-10 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                        </svg>
+                        <p class="text-gray-600">
+                          @if (selectedFile()) {
+                            {{ selectedFile()?.name }}
+                          } @else {
+                            Haz clic para seleccionar un archivo
+                          }
+                        </p>
+                        <p class="text-gray-400 text-sm mt-1">Archivos soportados: CSV, Excel (.xlsx, .xls)</p>
+                      </label>
+                    </div>
                   </div>
-                </div>
+                } @else {
+                  <div class="space-y-4">
+                    <div class="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                      </svg>
+                      <span>Archivo: <strong>{{ selectedFile()?.name }}</strong></span>
+                      <button (click)="resetFileSelection()" class="text-indigo-600 hover:text-indigo-700 ml-auto">
+                        Cambiar archivo
+                      </button>
+                    </div>
 
-                <!-- Selección de lista -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Lista de destino</label>
-                  <select [(ngModel)]="selectedImportListId" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                    <option value="">Selecciona una lista...</option>
-                    @for (list of contactLists(); track list.id) {
-                      <option [value]="list.id">{{ list.name }}</option>
-                    }
-                  </select>
-                </div>
+                    <!-- Selección de lista -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">Lista de destino</label>
+                      @if (showCreateListFromImport()) {
+                        <!-- Formulario para crear nueva lista -->
+                        <div class="flex gap-2">
+                          <input type="text" 
+                                 [(ngModel)]="newListName"
+                                 class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                 placeholder="Nombre de la nueva lista">
+                          <button (click)="createListFromImport()"
+                                  [disabled]="!newListName.trim() || isSavingList()"
+                                  class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300">
+                            {{ isSavingList() ? 'Guardando...' : 'Crear' }}
+                          </button>
+                          <button (click)="cancelCreateListFromImport()"
+                                  class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+                            Cancelar
+                          </button>
+                        </div>
+                        @if (listError()) {
+                          <p class="text-red-600 text-sm mt-2">{{ listError() }}</p>
+                        }
+                      } @else {
+                        <div class="flex gap-2">
+                          <select [(ngModel)]="selectedImportListId" 
+                                  class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="">Selecciona una lista...</option>
+                            @for (list of contactLists(); track list.id) {
+                              <option [value]="list.id">{{ list.name }}</option>
+                            }
+                          </select>
+                          <button (click)="showCreateListFromImport.set(true)"
+                                  class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            Nueva Lista
+                          </button>
+                        </div>
+                      }
+                    </div>
+
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">Columnas detectadas</label>
+                      <div class="flex flex-wrap gap-2">
+                        @for (column of detectedColumns(); track column) {
+                          <span class="px-3 py-1 bg-indigo-100 text-indigo-800 text-sm rounded-full">
+                            {{ column }}
+                          </span>
+                        }
+                      </div>
+                      <p class="text-sm text-gray-500 mt-2">{{ totalContactsFound() }} contactos encontrados</p>
+                    </div>
+
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">Vista previa (primeros 3 registros)</label>
+                      <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                        <table class="w-full text-sm">
+                          <thead class="bg-gray-50">
+                            <tr>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                            </tr>
+                          </thead>
+                          <tbody class="divide-y divide-gray-200">
+                            @for (row of previewData(); track $index) {
+                              <tr class="hover:bg-gray-50">
+                                <td class="px-3 py-2 text-gray-700">{{ row.email || '-' }}</td>
+                                <td class="px-3 py-2 text-gray-700">{{ row.name || '-' }}</td>
+                              </tr>
+                            }
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p class="text-blue-700 text-sm">
+                        El archivo será procesado por el backend. Asegúrate de que la columna "email" exista en el archivo.
+                      </p>
+                    </div>
+                  </div>
+                }
 
                 @if (importError()) {
                   <div class="p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -376,14 +485,15 @@ import { ContactList, Contact, getContactId } from '../../core/models/contact.mo
                 }
               }
             </div>
+            
             <div class="flex justify-end gap-3 p-4 border-t border-gray-200 bg-gray-50">
               <button (click)="closeImportModal()"
                       class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
                 {{ importSuccess() ? 'Cerrar' : 'Cancelar' }}
               </button>
-              @if (!importSuccess()) {
+              @if (!importSuccess() && isFileValid()) {
                 <button (click)="handleFileUpload()"
-                        [disabled]="!selectedFile || !selectedImportListId || isImporting()"
+                        [disabled]="!selectedImportListId || isImporting()"
                         class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2 transition-colors">
                   @if (isImporting()) {
                     <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -402,16 +512,16 @@ import { ContactList, Contact, getContactId } from '../../core/models/contact.mo
   `
 })
 export class ContactListComponent implements OnInit {
-  private contactService = inject(ContactService);
+  contactService = inject(ContactService);
   private authService = inject(AuthService);
-  private http = inject(HttpClient);
-  private readonly API_URL = '/api/contacts';
+  private importService = inject(ImportService);
 
-  contactLists = this.contactService.contactLists;
-  contacts = this.contactService.contacts;
-  isLoading = this.contactService.loading;
+  contactLists = computed(() => this.contactService.contactLists());
+  contacts = computed(() => this.contactService.contacts());
+  isLoading = computed(() => this.contactService.loading());
 
-  // UI State
+  constructor() {}
+
   expandedListId = signal<string | null>(null);
   showListModal = signal(false);
   showContactModal = signal(false);
@@ -423,8 +533,7 @@ export class ContactListComponent implements OnInit {
   listError = signal('');
   contactError = signal('');
   searchTerm = '';
-  
-  // Computed value that automatically updates when contacts() changes
+
   filteredContacts = computed(() => {
     const allContacts = this.contacts();
     const term = this.searchTerm.trim().toLowerCase();
@@ -433,13 +542,12 @@ export class ContactListComponent implements OnInit {
       return allContacts;
     }
     
-    return allContacts.filter(c => 
+    return allContacts.filter((c: Contact) => 
       c.email.toLowerCase().includes(term) || 
       (c.name && c.name.toLowerCase().includes(term))
     );
   });
 
-  // Form data
   editingListId = '';
   listName = '';
   editingContactId = '';
@@ -452,8 +560,17 @@ export class ContactListComponent implements OnInit {
     this.loadContactLists();
   }
 
+  changePage(page: number) {
+    const userId = this.authService.currentUser()?.id;
+    if (userId && page >= 0) {
+      this.contactService.loadUserContactLists(userId, page, 10);
+    }
+  }
+
   loadContactLists() {
     const userId = this.authService.currentUser()?.id;
+    console.log('👥 CONTACT-LIST - currentUser():', this.authService.currentUser());
+    console.log('👥 CONTACT-LIST - userId:', userId);
     if (userId) {
       this.contactService.loadUserContactLists(userId);
     }
@@ -476,9 +593,6 @@ export class ContactListComponent implements OnInit {
     }, 300);
   }
 
-  // filterContacts is now a computed value - no need to call it manually
-
-  // List operations
   openCreateListModal() {
     this.isEditingList.set(false);
     this.listName = '';
@@ -502,7 +616,6 @@ export class ContactListComponent implements OnInit {
     this.listError.set('');
 
     if (this.isEditingList()) {
-      // Update existing list
       this.contactService.updateContactList(this.editingListId, { name: this.listName, ownerId: userId }).subscribe({
         next: (updatedList) => {
           this.contactService.updateContactListInSignal(updatedList);
@@ -514,7 +627,6 @@ export class ContactListComponent implements OnInit {
         }
       });
     } else {
-      // Create new list
       this.contactService.createContactList({ name: this.listName.trim(), ownerId: userId }).subscribe({
         next: (newList) => {
           this.contactService.addContactListToSignal(newList);
@@ -547,7 +659,6 @@ export class ContactListComponent implements OnInit {
     this.isSavingList.set(false);
   }
 
-  // Contact operations
   openAddContactModal(listId: string) {
     this.isEditingContact.set(false);
     this.currentListId = listId;
@@ -561,7 +672,8 @@ export class ContactListComponent implements OnInit {
   editContact(contact: Contact) {
     this.isEditingContact.set(true);
     this.editingContactId = getContactId(contact);
-    this.currentListId = contact.listId;
+    // Use contact.listId if available, otherwise use expandedListId
+    this.currentListId = contact.listId || this.expandedListId() || '';
     this.contactEmail = contact.email;
     this.contactName = contact.name || '';
     this.contactSubscribed = contact.subscribed;
@@ -576,8 +688,12 @@ export class ContactListComponent implements OnInit {
     this.contactError.set('');
 
     if (this.isEditingContact()) {
-      // Update existing contact
-      this.contactService.updateContact(this.editingContactId, { 
+      if (!this.editingContactId) {
+        this.contactError.set('Error: ID del contacto no válido');
+        this.isSavingContact.set(false);
+        return;
+      }
+      this.contactService.updateContact(this.editingContactId, this.currentListId, { 
         email: this.contactEmail, 
         name: this.contactName || undefined,
         subscribed: this.contactSubscribed 
@@ -593,7 +709,6 @@ export class ContactListComponent implements OnInit {
         }
       });
     } else {
-      // Create new contact
       this.contactService.createContact({
         contactListId: this.currentListId,
         email: this.contactEmail,
@@ -648,28 +763,39 @@ export class ContactListComponent implements OnInit {
   }
 
   getContactCount(list: ContactList): number {
-    // Fallback: usar totalContacts del backend o contar desde contactos cargados
     if (list.totalContacts > 0) {
       return list.totalContacts;
     }
-    // Fallback: contar desde los contactos cargados
     return this.contactService.contactsCountByList()[list.id] || 0;
   }
 
-  // Importación CSV/Excel
+  // Importación
   showImportModal = signal(false);
   isImporting = signal(false);
   importError = signal('');
   importSuccess = signal(false);
   selectedImportListId = '';
-  selectedFile: File | null = null;
+  selectedFile = signal<File | null>(null);
+  detectedColumns = signal<string[]>([]);
+  previewData = signal<ParsedContact[]>([]);
+  showCreateListFromImport = signal(false);
+  newListName = '';
+  parsedFileData: ParsedContact[] = []; // Ahora es pública
+  totalContactsFound = signal(0);
 
   openImportModal() {
     this.showImportModal.set(true);
     this.importError.set('');
     this.importSuccess.set(false);
-    this.selectedFile = null;
+    this.selectedFile.set(null);
     this.selectedImportListId = '';
+    this.detectedColumns.set([]);
+    this.previewData.set([]);
+    this.parsedFileData = [];
+    this.showCreateListFromImport.set(false);
+    this.newListName = '';
+    this.listError.set('');
+    this.totalContactsFound.set(0);
   }
 
   closeImportModal() {
@@ -677,20 +803,159 @@ export class ContactListComponent implements OnInit {
     this.isImporting.set(false);
     this.importError.set('');
     this.importSuccess.set(false);
-    this.selectedFile = null;
+    this.selectedFile.set(null);
+    this.detectedColumns.set([]);
+    this.previewData.set([]);
+    this.parsedFileData = [];
+    this.showCreateListFromImport.set(false);
+    this.newListName = '';
+    this.listError.set('');
+    this.totalContactsFound.set(0);
   }
 
-  onFileSelected(event: Event) {
+  resetFileSelection() {
+    this.selectedFile.set(null);
+    this.detectedColumns.set([]);
+    this.previewData.set([]);
+    this.parsedFileData = [];
+    this.totalContactsFound.set(0);
+  }
+
+  createListFromImport() {
+    const userId = this.authService.currentUser()?.id;
+    if (!userId || !this.newListName.trim()) return;
+
+    this.isSavingList.set(true);
+    this.listError.set('');
+
+    this.contactService.createContactList({ name: this.newListName.trim(), ownerId: userId }).subscribe({
+      next: (newList) => {
+        this.contactService.addContactListToSignal(newList);
+        this.selectedImportListId = newList.id;
+        this.showCreateListFromImport.set(false);
+        this.newListName = '';
+        this.isSavingList.set(false);
+      },
+      error: (err: any) => {
+        this.listError.set(err.error?.message || 'Error al crear la lista');
+        this.isSavingList.set(false);
+      }
+    });
+  }
+
+  cancelCreateListFromImport() {
+    this.showCreateListFromImport.set(false);
+    this.newListName = '';
+    this.listError.set('');
+  }
+
+  isFileValid(): boolean {
+    return this.selectedFile() !== null && 
+           this.detectedColumns().length > 0 &&
+           this.hasRequiredColumns();
+  }
+
+  hasRequiredColumns(): boolean {
+    const columns = this.detectedColumns().map(c => c.toLowerCase());
+    return columns.includes('email');
+  }
+
+  async onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      this.selectedFile = input.files[0];
-      this.importError.set('');
+    if (!input.files || input.files.length === 0) return;
+
+    const file = input.files[0];
+    this.selectedFile.set(file);
+    this.importError.set('');
+
+    try {
+      const data = await this.parseFile(file);
+      this.parsedFileData = data;
+      this.totalContactsFound.set(data.length);
+      
+      if (data.length === 0) {
+        this.importError.set('El archivo está vacío o no contiene datos válidos');
+        this.resetFileSelection();
+        return;
+      }
+
+      const columns = Object.keys(data[0]);
+      this.detectedColumns.set(columns);
+      this.previewData.set(data.slice(0, 3));
+
+      if (!this.hasRequiredColumns()) {
+        this.importError.set('El archivo debe contener la columna "email" obligatoriamente');
+      }
+    } catch (error: any) {
+      this.importError.set('Error al leer el archivo: ' + (error.message || 'Formato no válido'));
+      this.resetFileSelection();
     }
   }
 
+  private parseFile(file: File): Promise<ParsedContact[]> {
+    return new Promise((resolve, reject) => {
+      const extension = file.name.split('.').pop()?.toLowerCase();
+
+      if (extension === 'csv') {
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => {
+            const data = results.data as ParsedContact[];
+            const cleanedData = data.map(row => {
+              const cleaned: ParsedContact = { email: '', name: '' };
+              Object.keys(row).forEach(key => {
+                const cleanKey = key.trim().toLowerCase();
+                const cleanValue = String(row[key] || '').trim();
+                if (cleanKey === 'email') cleaned.email = cleanValue;
+                if (cleanKey === 'name') cleaned.name = cleanValue;
+              });
+              return cleaned;
+            }).filter(row => row.email || row.name);
+            resolve(cleanedData);
+          },
+          error: (error) => reject(error)
+        });
+      } else if (extension === 'xlsx' || extension === 'xls') {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = new Uint8Array(e.target?.result as ArrayBuffer);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet) as any[];
+            
+            const cleanedData = jsonData.map(row => {
+              const cleaned: ParsedContact = { email: '', name: '' };
+              Object.keys(row).forEach(key => {
+                const cleanKey = key.trim().toLowerCase();
+                const cleanValue = String(row[key] || '').trim();
+                if (cleanKey === 'email') cleaned.email = cleanValue;
+                if (cleanKey === 'name') cleaned.name = cleanValue;
+              });
+              return cleaned;
+            }).filter(row => row.email || row.name);
+            resolve(cleanedData);
+          } catch (error: any) {
+            reject(error);
+          }
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+      } else {
+        reject(new Error('Formato de archivo no soportado'));
+      }
+    });
+  }
+
   handleFileUpload() {
-    if (!this.selectedFile || !this.selectedImportListId) {
+    if (!this.selectedFile() || !this.selectedImportListId) {
       this.importError.set('Por favor selecciona un archivo y una lista de destino');
+      return;
+    }
+
+    if (!this.hasRequiredColumns()) {
+      this.importError.set('El archivo debe contener la columna "email"');
       return;
     }
 
@@ -707,21 +972,17 @@ export class ContactListComponent implements OnInit {
     const formData = new FormData();
     formData.append('listId', this.selectedImportListId);
     formData.append('ownerId', ownerId);
-    formData.append('file', this.selectedFile);
+    formData.append('file', this.selectedFile()!);
 
-    console.log('Importando archivo:', this.selectedFile.name, 'a la lista:', this.selectedImportListId);
-
-    this.http.post<any[]>(`${this.API_URL}/import/file`, formData).subscribe({
-      next: (contacts) => {
+    this.importService.importFromFile(this.selectedImportListId, ownerId, this.selectedFile()!).subscribe({
+      next: (contacts: any[]) => {
         console.log('Importación exitosa:', contacts.length, 'contactos importados');
         this.isImporting.set(false);
         this.importSuccess.set(true);
-        // Recargar contactos de la lista
         this.loadContacts(this.selectedImportListId);
-        // Recargar listas para actualizar conteo
         this.loadContactLists();
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error importing file:', err);
         this.isImporting.set(false);
         this.importError.set(err.error?.message || 'Error al importar el archivo');

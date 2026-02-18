@@ -1,7 +1,9 @@
 import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { UserService, UpdateUserRequest } from '../../core/services/user.service';
 import { User } from '../../core/models/auth.model';
 
 @Component({
@@ -18,6 +20,21 @@ import { User } from '../../core/models/auth.model';
         </div>
       </div>
 
+      <!-- Error/Success Messages -->
+      @if (message()) {
+        <div [class]="isError() ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-green-50 border border-green-200 text-green-700'" 
+             class="p-4 rounded-lg flex items-center gap-3">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            @if (isError()) {
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            } @else {
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            }
+          </svg>
+          {{ message() }}
+        </div>
+      }
+
       <!-- Información Personal -->
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div class="p-4 border-b border-gray-200 bg-gray-50">
@@ -30,7 +47,14 @@ import { User } from '../../core/models/auth.model';
         </div>
         
         <div class="p-6">
-          @if (isEditing()) {
+          @if (isLoading()) {
+            <div class="flex items-center justify-center py-8">
+              <svg class="w-8 h-8 animate-spin text-indigo-600" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+          } @else if (isEditing()) {
             <!-- Formulario de edición -->
             <form [formGroup]="personalForm" class="space-y-4">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -42,9 +66,13 @@ import { User } from '../../core/models/auth.model';
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
                   <input type="email" formControlName="email"
-                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                         [class.bg-gray-100]="true">
+                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                 </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Nueva Contraseña (opcional)</label>
+                <input type="password" formControlName="password" placeholder="Dejar en blanco para no cambiar"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
               </div>
               <div class="flex justify-end gap-3 pt-4">
                 <button type="button" (click)="cancelEdit()"
@@ -89,14 +117,14 @@ import { User } from '../../core/models/auth.model';
         </div>
       </div>
 
-      <!-- Información General de la Cuenta -->
+      <!-- Información de la Cuenta (Plan y Emails) -->
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div class="p-4 border-b border-gray-200 bg-gray-50">
           <div class="flex items-center gap-3">
             <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            <h3 class="text-lg font-semibold text-gray-900">Información General</h3>
+            <h3 class="text-lg font-semibold text-gray-900">Información de la Cuenta</h3>
           </div>
         </div>
         
@@ -117,16 +145,28 @@ import { User } from '../../core/models/auth.model';
           <div class="flex items-center justify-between py-3 border-b border-gray-100">
             <div class="flex items-center gap-3">
               <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
               </svg>
               <div>
-                <p class="font-medium text-gray-900">Contraseña</p>
-                <p class="text-sm text-gray-500">••••••••••••</p>
+                <p class="font-medium text-gray-900">Plan actual</p>
+                <p class="text-sm text-gray-500">{{ currentUser()?.plan || 'FREE' }}</p>
               </div>
             </div>
             <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
-              Cambiar contraseña
+              Actualizar plan
             </button>
+          </div>
+          
+          <div class="flex items-center justify-between py-3 border-b border-gray-100">
+            <div class="flex items-center gap-3">
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+              </svg>
+              <div>
+                <p class="font-medium text-gray-900">Emails enviados</p>
+                <p class="text-sm text-gray-500">{{ currentUser()?.emailsSent || 0 | number }} emails</p>
+              </div>
+            </div>
           </div>
           
           <div class="flex items-center justify-between py-3">
@@ -136,7 +176,7 @@ import { User } from '../../core/models/auth.model';
               </svg>
               <div>
                 <p class="font-medium text-gray-900">Miembro desde</p>
-                <p class="text-sm text-gray-500">Febrero 2025</p>
+                <p class="text-sm text-gray-500">{{ memberSince() }}</p>
               </div>
             </div>
           </div>
@@ -203,10 +243,18 @@ import { User } from '../../core/models/auth.model';
           <div class="flex items-center justify-between">
             <div>
               <p class="font-medium text-gray-900">Eliminar cuenta</p>
-              <p class="text-sm text-gray-500\">Esta acción es irreversible</p>
+              <p class="text-sm text-gray-500">Esta acción es irreversible</p>
             </div>
-            <button class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-              Eliminar cuenta
+            <button (click)="confirmDeleteAccount()"
+                    [disabled]="isDeleting()"
+                    class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 transition-colors flex items-center gap-2">
+              @if (isDeleting()) {
+                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              }
+              {{ isDeleting() ? 'Eliminando...' : 'Eliminar cuenta' }}
             </button>
           </div>
         </div>
@@ -216,17 +264,25 @@ import { User } from '../../core/models/auth.model';
 })
 export class ProfileComponent implements OnInit {
   private authService = inject(AuthService);
+  private userService = inject(UserService);
+  private router = inject(Router);
   private fb = inject(FormBuilder);
 
   currentUser = this.authService.currentUser;
   isEditing = signal(false);
   isSaving = signal(false);
+  isLoading = signal(false);
+  isDeleting = signal(false);
+  isError = signal(false);
+  message = signal('');
   emailNotifications = signal(true);
   newsletter = signal(false);
+  memberSince = signal('Febrero 2025');
 
   personalForm: FormGroup = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
-    email: ['', [Validators.required, Validators.email]]
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.minLength(6)]]
   });
 
   ngOnInit() {
@@ -238,7 +294,25 @@ export class ProfileComponent implements OnInit {
     if (user) {
       this.personalForm.patchValue({
         name: user.name,
-        email: user.email
+        email: user.email,
+        password: ''
+      });
+      // Cargar usuario desde el endpoint GET /api/user/{id}
+      this.isLoading.set(true);
+      this.userService.getUser(user.id).subscribe({
+        next: (updatedUser) => {
+          this.isLoading.set(false);
+          // Actualizar el usuario en AuthService
+          this.authService.updateUser(updatedUser);
+          this.personalForm.patchValue({
+            name: updatedUser.name,
+            email: updatedUser.email
+          });
+        },
+        error: (err) => {
+          this.isLoading.set(false);
+          console.error('Error cargando usuario:', err);
+        }
       });
     }
   }
@@ -251,6 +325,7 @@ export class ProfileComponent implements OnInit {
   startEdit() {
     this.loadUserData();
     this.isEditing.set(true);
+    this.message.set('');
   }
 
   cancelEdit() {
@@ -261,13 +336,68 @@ export class ProfileComponent implements OnInit {
   savePersonalData() {
     if (!this.personalForm.valid) return;
 
+    const user = this.currentUser();
+    if (!user) return;
+
     this.isSaving.set(true);
-    // Aquí se implementaría la llamada al servicio para actualizar los datos
-    setTimeout(() => {
-      this.isSaving.set(false);
-      this.isEditing.set(false);
-      alert('Datos actualizados correctamente');
-    }, 1000);
+    this.message.set('');
+
+    const formValue = this.personalForm.value;
+    const updateData: UpdateUserRequest = {
+      name: formValue.name,
+      email: formValue.email
+    };
+
+    // Solo incluir password si no está vacío
+    if (formValue.password && formValue.password.length >= 6) {
+      updateData.password = formValue.password;
+    }
+
+    this.userService.updateUser(user.id, updateData).subscribe({
+      next: (updatedUser) => {
+        this.isSaving.set(false);
+        this.isEditing.set(false);
+        // Actualizar el usuario en AuthService
+        this.authService.updateUser(updatedUser);
+        this.message.set('Datos actualizados correctamente');
+        this.isError.set(false);
+        setTimeout(() => this.message.set(''), 3000);
+      },
+      error: (err) => {
+        this.isSaving.set(false);
+        console.error('Error actualizando usuario:', err);
+        this.message.set('Error al actualizar: ' + (err.error?.message || err.message));
+        this.isError.set(true);
+      }
+    });
+  }
+
+  confirmDeleteAccount() {
+    if (confirm('¿Estás seguro de que quieres eliminar tu cuenta? Esta acción es irreversible.')) {
+      this.deleteAccount();
+    }
+  }
+
+  deleteAccount() {
+    const user = this.currentUser();
+    if (!user) return;
+
+    this.isDeleting.set(true);
+    this.message.set('');
+
+    this.userService.deleteUser(user.id).subscribe({
+      next: () => {
+        this.isDeleting.set(false);
+        // Cerrar sesión después de eliminar
+        this.authService.logout();
+      },
+      error: (err) => {
+        this.isDeleting.set(false);
+        console.error('Error eliminando cuenta:', err);
+        this.message.set('Error al eliminar cuenta: ' + (err.error?.message || err.message));
+        this.isError.set(true);
+      }
+    });
   }
 
   toggleEmailNotifications() {

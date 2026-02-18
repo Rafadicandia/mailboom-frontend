@@ -19,5 +19,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  plan: string;
+  emailsSent: number;
   role: 'ADMIN' | 'USER';
 }
