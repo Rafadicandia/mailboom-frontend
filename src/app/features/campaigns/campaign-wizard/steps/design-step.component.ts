@@ -44,19 +44,9 @@ import { QuillEditorComponent } from '../../../../shared/components/quill-editor
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-gray-900">Tu código HTML</h3>
-            <div class="flex bg-gray-100 rounded-lg p-1">
-              <button type="button" (click)="htmlViewMode.set('code')" [class.bg-white]="htmlViewMode() === 'code'" class="px-3 py-1 rounded text-sm">Código</button>
-              <button type="button" (click)="htmlViewMode.set('preview')" [class.bg-white]="htmlViewMode() === 'preview'" class="px-3 py-1 rounded text-sm">Vista previa</button>
-            </div>
           </div>
           
-          @if (htmlViewMode() === 'code') {
-            <textarea [(ngModel)]="customHtml" rows="15" class="w-full p-4 font-mono text-sm bg-gray-900 text-green-400 rounded-lg resize-none" placeholder="<!-- Pega tu HTML aquí -->"></textarea>
-          } @else {
-            <div class="border border-gray-200 rounded-lg overflow-hidden">
-              <iframe [srcdoc]="getCustomHtmlPreview()" class="w-full h-96 border-0"></iframe>
-            </div>
-          }
+          <textarea [(ngModel)]="customHtml" rows="15" class="w-full p-4 font-mono text-sm bg-gray-900 text-green-400 rounded-lg resize-none" placeholder="<!-- Pega tu HTML aquí -->"></textarea>
           
           <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
             💡 Tip: Usa variables como {{ '{{name}}' }}, {{ '{{email}}' }} para personalizar
@@ -67,6 +57,37 @@ import { QuillEditorComponent } from '../../../../shared/components/quill-editor
       <!-- MODO: DISEÑADOR VISUAL -->
       @if (mode() === 'template') {
         <div class="space-y-6">
+          
+          <!-- Mensaje cuando hay contenido HTML guardado pero no hay bloques -->
+          @if (cachedHtml() && cachedHtml().trim().length > 0 && design.content.length === 0) {
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-yellow-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div class="flex-1">
+                  <h4 class="text-sm font-medium text-yellow-800">Contenido guardado detectado</h4>
+                  <p class="text-sm text-yellow-700 mt-1">
+                    Esta campaña tiene contenido HTML guardado. ¿Qué deseas hacer?
+                  </p>
+                  <div class="flex gap-2 mt-3 flex-wrap">
+                    <button type="button" (click)="parseHtmlToBlocks()" 
+                            class="px-3 py-1.5 bg-indigo-100 text-indigo-800 rounded text-sm hover:bg-indigo-200 transition-colors">
+                      Importar al diseñador visual
+                    </button>
+                    <button type="button" (click)="switchToHtmlMode()" 
+                            class="px-3 py-1.5 bg-yellow-100 text-yellow-800 rounded text-sm hover:bg-yellow-200 transition-colors">
+                      Editar como HTML
+                    </button>
+                    <button type="button" (click)="clearCachedHtml()" 
+                            class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200 transition-colors">
+                      Empezar de nuevo
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
           
           <!-- CONFIGURACIÓN GLOBAL -->
           <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
@@ -156,50 +177,6 @@ import { QuillEditorComponent } from '../../../../shared/components/quill-editor
               <span class="font-medium text-gray-700">Contenido del email</span>
             </div>
             <div class="p-4 space-y-4 bg-white">
-              
-              <!-- Herramientas de formato -->
-              <div class="mb-3">
-                <p class="text-xs text-gray-500 mb-2">Formato para nuevos bloques</p>
-                <div class="flex flex-wrap gap-1 p-2 bg-indigo-50 rounded-lg border border-indigo-100">
-                  <div class="flex bg-white rounded border mr-2">
-                    <button (click)="setAlignment('left')" [class.bg-indigo-100]="currentStyle.align === 'left'" 
-                            class="px-2 py-1 hover:bg-gray-100" title="Alinear izquierda">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h10M4 18h16"/></svg>
-                    </button>
-                    <button (click)="setAlignment('center')" [class.bg-indigo-100]="currentStyle.align === 'center'" 
-                            class="px-2 py-1 hover:bg-gray-100" title="Centrar">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M12 6v12M4 18h16"/></svg>
-                    </button>
-                    <button (click)="setAlignment('right')" [class.bg-indigo-100]="currentStyle.align === 'right'" 
-                            class="px-2 py-1 hover:bg-gray-100" title="Alinear derecha">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M10 18h10M4 12h10M4 18h10"/></svg>
-                    </button>
-                  </div>
-                  <button (click)="toggleBold()" [class.bg-indigo-100]="currentStyle.bold" 
-                          class="px-2 py-1 font-bold border rounded hover:bg-gray-100" title="Negrita">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z"/></svg>
-                  </button>
-                  <button (click)="toggleItalic()" [class.bg-indigo-100]="currentStyle.italic" 
-                          class="px-2 py-1 italic border rounded hover:bg-gray-100" title="Cursiva">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-                  </button>
-                  <button (click)="toggleUnderline()" [class.bg-indigo-100]="currentStyle.underline" 
-                          class="px-2 py-1 border rounded hover:bg-gray-100" title="Subrayado" [style.text-decoration]="currentStyle.underline ? 'underline' : 'none'">U</button>
-                  <input type="color" [(ngModel)]="currentStyle.color" (ngModelChange)="currentStyle.color = $event"
-                         class="w-8 h-8 rounded cursor-pointer border hover:ring-2 hover:ring-indigo-300" title="Color de texto">
-                  <select [(ngModel)]="currentStyle.fontSize" class="text-sm border rounded px-2 py-1" title="Tamaño">
-                    <option value="small">12px</option>
-                    <option value="normal">14px</option>
-                    <option value="large">18px</option>
-                    <option value="xlarge">24px</option>
-                  </select>
-                  <select [(ngModel)]="currentStyle.fontFamily" class="text-sm border rounded px-2 py-1" title="Tipo de letra">
-                    @for (font of fonts; track font) {
-                      <option [value]="font">{{ font }}</option>
-                    }
-                  </select>
-                </div>
-              </div>
 
               <!-- Bloques de contenido -->
               @for (block of design.content; track block.id; let i = $index) {
@@ -321,11 +298,6 @@ import { QuillEditorComponent } from '../../../../shared/components/quill-editor
 
               <!-- Agregar bloques -->
               <div class="flex gap-2 justify-center pt-4 flex-wrap">
-                <button (click)="addBlock('text')" 
-                        class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm hover:bg-gray-50 hover:border-indigo-300 transition-colors flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
-                  + Texto simple
-                </button>
                 <button (click)="addBlock('rich-text')" 
                         class="px-4 py-2 bg-indigo-50 border border-indigo-300 rounded-lg text-sm hover:bg-indigo-100 transition-colors flex items-center gap-1 text-indigo-700">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L15 11.828l-4.586 4.586z"/></svg>
@@ -431,6 +403,45 @@ import { QuillEditorComponent } from '../../../../shared/components/quill-editor
       </div>
 
     </div>
+    
+    <!-- Modal de confirmación personalizado -->
+    @if (showConfirmModal()) {
+      <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+          <div class="bg-indigo-600 px-6 py-4">
+            <h3 class="text-lg font-semibold text-white">Confirmar acción</h3>
+          </div>
+          <div class="p-6">
+            <p class="text-gray-700 text-base mb-6">{{ confirmModalMessage() }}</p>
+            
+            <!-- Si hay contenido en ambos editores, mostrar opciones -->
+            @if (hasVisualAndHtmlContent()) {
+              <div class="flex gap-3">
+                <button type="button" (click)="chooseEditor('visual')" 
+                        class="flex-1 px-4 py-3 bg-indigo-50 border-2 border-indigo-300 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors font-medium">
+                  Editor visual
+                </button>
+                <button type="button" (click)="chooseEditor('html')" 
+                        class="flex-1 px-4 py-3 bg-gray-50 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors font-medium">
+                  HTML propio
+                </button>
+              </div>
+            } @else {
+              <div class="flex gap-3 justify-end">
+                <button type="button" (click)="closeConfirmModal(false)" 
+                        class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                  Cancelar
+                </button>
+                <button type="button" (click)="closeConfirmModal(true)" 
+                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                  Aceptar
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [`
     :host {
@@ -442,11 +453,17 @@ export class DesignStepComponent implements OnInit, OnChanges {
   @Input() initialDesign?: EmailDesign | null;
   
   mode = signal<EditorMode>('template');
-  htmlViewMode = signal<'code' | 'preview'>('code');
   showHeaderConfig = signal(true);
   showFooterConfig = signal(true);
   
   customHtml = signal('');
+  cachedHtml = signal(''); // Caché para HTML personalizado
+  
+  // Estado del modal de confirmación
+  showConfirmModal = signal(false);
+  confirmModalMessage = signal('');
+  confirmModalAction = signal<(() => void) | null>(null);
+  
   buttonColor = signal('#4f46e5');
   buttonTextColor = signal('#ffffff');
   buttonBorderRadius = signal(8);
@@ -498,16 +515,14 @@ export class DesignStepComponent implements OnInit, OnChanges {
   @Output() onBack = new EventEmitter<void>();
 
   constructor(private cdr: ChangeDetectorRef) {
-    // Si hay un diseño inicial, usarlo; sino agregar un bloque de texto por defecto
+    // Si hay un diseño inicial, usarlo; sino dejar vacío para que el usuario agregue bloques
     try {
       if (this.initialDesign) {
         this.applyInitialDesign();
-      } else {
-        this.addBlock('text');
       }
+      // No se agregan bloques por defecto
     } catch (e) {
       console.error('Error initializing design:', e);
-      this.addBlock('text');
     }
   }
 
@@ -575,13 +590,76 @@ export class DesignStepComponent implements OnInit, OnChanges {
       this.customHtml.set(design.customHtml);
     }
     
+    // Si hay customHtml (del borrador guardado) y estamos en modo template,
+    // guardarlo en caché para que el usuario pueda verlo si cambia a HTML
+    if (design.customHtml && design.customHtml.trim().length > 0) {
+      this.cachedHtml.set(design.customHtml);
+    }
+    
     // Refrescar vista previa
     this.refreshPreview();
   }
 
   onModeChange() {
-    this.design.mode = this.mode();
+    // El usuario puede cambiar libremente entre modos
+    // Al cambiar, se maneja la caché automáticamente
+    const newMode = this.mode();
+    const previousMode = this.design.mode;
+    
+    if (newMode === 'custom-html') {
+      // Cambiar a HTML: cargar de caché si no hay HTML actual
+      if (!this.customHtml() && this.cachedHtml()) {
+        this.customHtml.set(this.cachedHtml());
+      }
+    } else if (newMode === 'template') {
+      // Cambiar a editor visual: guardar HTML en caché antes de limpiar
+      if (this.customHtml() && this.customHtml().trim().length > 0) {
+        this.cachedHtml.set(this.customHtml());
+      }
+      this.customHtml.set('');
+    }
+    
+    this.design.mode = newMode;
     this.refreshPreview();
+  }
+  
+
+  closeConfirmModal(confirmed: boolean) {
+    this.showConfirmModal.set(false);
+    if (confirmed && this.confirmModalAction()) {
+      this.confirmModalAction()!();
+    }
+    this.confirmModalAction.set(null);
+  }
+  
+  hasVisualAndHtmlContent(): boolean {
+    const hasVisualContent = this.design.content && this.design.content.length > 0;
+    const hasHtmlContent = !!(this.customHtml() && this.customHtml().trim().length > 0) || 
+                           !!(this.cachedHtml() && this.cachedHtml().trim().length > 0);
+    return hasVisualContent && hasHtmlContent;
+  }
+  
+  chooseEditor(choice: 'visual' | 'html') {
+    this.showConfirmModal.set(false);
+    
+    if (choice === 'visual') {
+      // Usar editor visual - asegurar que estamos en modo template
+      this.mode.set('template');
+      this.design.mode = 'template';
+      // Limpiar HTML actual si hay uno en el campo (mantener solo caché)
+      this.customHtml.set('');
+    } else {
+      // Usar HTML - obtener de campo actual o caché
+      const htmlToUse = this.customHtml() || this.cachedHtml();
+      this.customHtml.set(htmlToUse);
+      this.mode.set('custom-html');
+      this.design.mode = 'custom-html';
+      // Limpiar contenido visual
+      this.design.content = [];
+    }
+    
+    this.confirmModalAction.set(null);
+    this.emitFinalDesign();
   }
 
   getBlockLabel(type: string): string {
@@ -593,6 +671,191 @@ export class DesignStepComponent implements OnInit, OnChanges {
       'divider': 'Línea'
     };
     return labels[type] || type;
+  }
+
+  switchToHtmlMode() {
+    // Copiar el HTML guardado al campo de customHtml
+    if (this.cachedHtml()) {
+      this.customHtml.set(this.cachedHtml());
+    }
+    // Cambiar al modo HTML
+    this.mode.set('custom-html');
+    this.design.mode = 'custom-html';
+    this.refreshPreview();
+  }
+
+  clearCachedHtml() {
+    // Limpiar el HTML guardado en caché
+    this.cachedHtml.set('');
+    this.refreshPreview();
+  }
+
+  // Parsear HTML guardado y convertir a bloques del diseñador visual
+  parseHtmlToBlocks() {
+    const html = this.cachedHtml();
+    if (!html || html.trim().length === 0) {
+      alert('No hay contenido HTML para importar');
+      return;
+    }
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const blocks: ContentBlock[] = [];
+
+    // Buscar el contenedor principal del email
+    const container = doc.querySelector('.container') || doc.body;
+    
+    // Procesar cada elemento hijo directo del contenido
+    const contentDivs = container.querySelectorAll('div');
+    
+    contentDivs.forEach((div, index) => {
+      const style = div.getAttribute('style') || '';
+      const textAlign = style.includes('text-align:center') ? 'center' : 
+                        style.includes('text-align:right') ? 'right' : 'left';
+      const fontWeight = style.includes('font-weight:bold') ? true : false;
+      const fontStyle = style.includes('font-style:italic') ? 'italic' : 'normal';
+      const fontSize = style.includes('font-size:24px') ? 'xlarge' : 
+                       style.includes('font-size:20px') ? 'large' : 
+                       style.includes('font-size:14px') ? 'small' : 'normal';
+      const fontFamily = style.match(/font-family:([^;]+)/)?.[1] || 'Arial';
+      const color = style.match(/color:\s*([^;]+)/)?.[1] || '#333333';
+
+      // Detectar tipo de bloque por contenido y estructura
+      const img = div.querySelector('img');
+      const button = div.querySelector('a');
+      const hr = div.querySelector('hr');
+
+      // Verificar si es un botón (tiene estilo de botón)
+      const buttonStyle = button?.getAttribute('style') || '';
+      const isButton = button && (
+        buttonStyle.includes('background:') || 
+        buttonStyle.includes('background-color:') ||
+        button.textContent?.trim()
+      );
+
+      if (hr) {
+        // Es un divisor
+        blocks.push({
+          id: Date.now().toString() + index,
+          type: 'divider',
+          content: '',
+          padding: 20,
+          style: { fontFamily: 'Arial', fontSize: 'normal', color: '#333333', align: 'left' }
+        });
+      } else if (img && !button) {
+        // Es una imagen
+        const imgSrc = img.getAttribute('src') || '';
+        blocks.push({
+          id: Date.now().toString() + index,
+          type: 'image',
+          content: '',
+          url: imgSrc,
+          padding: 20,
+          style: { fontFamily: 'Arial', fontSize: 'normal', color: '#333333', align: textAlign }
+        });
+      } else if (isButton) {
+        // Es un botón
+        const buttonText = button?.textContent?.trim() || 'Click aquí';
+        const buttonUrl = button?.getAttribute('href') || '#';
+        const btnBgColor = buttonStyle.match(/background(-color)?:\s*([^;]+)/)?.[2]?.trim() || '#4f46e5';
+        const btnTextColor = buttonStyle.match(/color:\s*([^;]+)/)?.[1]?.trim() || '#ffffff';
+        const btnRadius = parseInt(buttonStyle.match(/border-radius:\s*(\d+)px/)?.[1] || '6');
+
+        // Actualizar colores del botón global
+        this.buttonColor.set(btnBgColor);
+        this.buttonTextColor.set(btnTextColor);
+        this.buttonBorderRadius.set(btnRadius);
+
+        blocks.push({
+          id: Date.now().toString() + index,
+          type: 'button',
+          content: buttonText,
+          url: buttonUrl,
+          padding: 20,
+          style: { fontFamily: 'Arial', fontSize: 'normal', color: '#333333', align: textAlign }
+        });
+      } else if (div.textContent?.trim() || div.innerHTML.includes('<')) {
+        // Es texto (rich-text o texto simple)
+        const innerHtml = div.innerHTML.trim();
+        const hasFormatting = innerHtml.includes('<b>') || 
+                            innerHtml.includes('<strong>') || 
+                            innerHtml.includes('<i>') || 
+                            innerHtml.includes('<em>') ||
+                            innerHtml.includes('<u>') ||
+                            innerHtml.includes('<p>') ||
+                            innerHtml.includes('<br');
+
+        if (hasFormatting || innerHtml.includes('<')) {
+          // Usar rich-text si tiene formato HTML
+          blocks.push({
+            id: Date.now().toString() + index,
+            type: 'rich-text',
+            content: '',
+            htmlContent: div.innerHTML,
+            padding: 20,
+            style: { fontFamily: fontFamily as FontFamily, fontSize: fontSize as FontSize, color: color, align: textAlign as 'left' | 'center' | 'right', bold: fontWeight, italic: fontStyle === 'italic' }
+          });
+        } else {
+          // Texto simple
+          blocks.push({
+            id: Date.now().toString() + index,
+            type: 'text',
+            content: div.textContent?.trim() || '',
+            padding: 20,
+            style: { fontFamily: fontFamily as FontFamily, fontSize: fontSize as FontSize, color: color, align: textAlign as 'left' | 'center' | 'right', bold: fontWeight, italic: fontStyle === 'italic' }
+          });
+        }
+      }
+    });
+
+    // Si no se detectaron bloques, intentar buscar en todo el body
+    if (blocks.length === 0) {
+      const bodyElements = doc.body.querySelectorAll('*');
+      bodyElements.forEach((el, index) => {
+        if (el.tagName === 'IMG' && !el.closest('a')) {
+          blocks.push({
+            id: Date.now().toString() + 'img' + index,
+            type: 'image',
+            content: '',
+            url: el.getAttribute('src') || '',
+            padding: 20,
+            style: { fontFamily: 'Arial', fontSize: 'normal', color: '#333333', align: 'center' }
+          });
+        } else if (el.tagName === 'A' && el.closest('div')) {
+          const aStyle = el.getAttribute('style') || '';
+          if (aStyle.includes('display:inline-block') || aStyle.includes('background')) {
+            blocks.push({
+              id: Date.now().toString() + 'btn' + index,
+              type: 'button',
+              content: el.textContent?.trim() || 'Click aquí',
+              url: el.getAttribute('href') || '#',
+              padding: 20,
+              style: { fontFamily: 'Arial', fontSize: 'normal', color: '#333333', align: 'center' }
+            });
+          }
+        } else if (el.tagName === 'HR') {
+          blocks.push({
+            id: Date.now().toString() + 'hr' + index,
+            type: 'divider',
+            content: '',
+            padding: 20,
+            style: { fontFamily: 'Arial', fontSize: 'normal', color: '#333333', align: 'left' }
+          });
+        }
+      });
+    }
+
+    if (blocks.length > 0) {
+      // Asignar los bloques al diseño
+      this.design.content = blocks;
+      // Limpiar la caché después de importar
+      this.cachedHtml.set('');
+      // Forzar actualización de la vista
+      this.refreshPreview();
+      this.cdr.detectChanges();
+    } else {
+      alert('No se pudieron detectar bloques en el HTML. Puedes editar el contenido como HTML.');
+    }
   }
 
   setAlignment(align: 'left' | 'center' | 'right') {
@@ -783,6 +1046,43 @@ export class DesignStepComponent implements OnInit, OnChanges {
   }
 
   continue() {
+    const hasVisualContent = this.design.content && this.design.content.length > 0;
+    const hasHtmlContent = (this.customHtml() && this.customHtml().trim().length > 0) || 
+                           (this.cachedHtml() && this.cachedHtml().trim().length > 0);
+    
+    // Si hay contenido en AMBOS editores, pedirle al usuario que elija
+    if (hasVisualContent && hasHtmlContent) {
+      this.showConfirmModal.set(true);
+      this.confirmModalMessage.set('Tienes contenido en ambos editores. ¿Qué contenido quieres usar?');
+      this.confirmModalAction.set(() => {
+        // Usamos el modo actual
+        this.proceedWithCurrentMode();
+      });
+      return;
+    }
+    
+    // Si solo hay contenido en un modo, continuar normalmente
+    this.proceedWithCurrentMode();
+  }
+  
+  proceedWithCurrentMode() {
+    // Si hay HTML en caché y estamos en modo visual, preguntar si quiere usarlo
+    if (this.mode() === 'template' && this.cachedHtml() && this.cachedHtml().trim().length > 0) {
+      this.showConfirmModal.set(true);
+      this.confirmModalMessage.set('Tienes HTML personalizado en caché. ¿Quieres usarlo?');
+      this.confirmModalAction.set(() => {
+        this.customHtml.set(this.cachedHtml());
+        this.mode.set('custom-html');
+        this.design.mode = 'custom-html';
+        this.emitFinalDesign();
+      });
+      return;
+    }
+    
+    this.emitFinalDesign();
+  }
+  
+  emitFinalDesign() {
     const finalDesign: EmailDesign = {
       ...this.design,
       customHtml: this.mode() === 'custom-html' ? this.customHtml() : undefined

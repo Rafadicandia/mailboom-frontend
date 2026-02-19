@@ -1,5 +1,5 @@
 import { Component, signal, OnInit, inject, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, JsonPipe } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CampaignService } from '../../../core/services/campaign.service';
@@ -7,7 +7,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { EmailDesign } from './templates/template.model';
 import { DesignStepComponent } from './steps/design-step.component';
 import { AudienceStepComponent } from './steps/audience-step.component';
-import { NewCampaignRequest } from '../../../core/models/campaign.model';
+import { NewCampaignRequest, Campaign } from '../../../core/models/campaign.model';
 import { ContactList } from '../../../core/models/contact.model';
 import { ContactService } from '../../../core/services/contact.service';
 
@@ -30,7 +30,7 @@ const fromDisplayNameValidators = [
 @Component({
   selector: 'app-campaign-wizard',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DesignStepComponent, AudienceStepComponent],
+  imports: [CommonModule, ReactiveFormsModule, JsonPipe, DesignStepComponent, AudienceStepComponent],
   template: `
     <div class="max-w-4xl mx-auto">
       <div class="mb-8">
@@ -73,6 +73,7 @@ const fromDisplayNameValidators = [
         
         <!-- PASO 1: CONFIG -->
         @if (currentStep() === 0) {
+          <!-- Debug: {{ configForm.value | json }} -->
           <form [formGroup]="configForm" class="space-y-6">
             <div>
               <h3 class="text-lg font-semibold text-gray-900 mb-1">Configuración Básica</h3>
@@ -209,15 +210,23 @@ export class CampaignWizardComponent implements OnInit {
   });
 
   ngOnInit() {
-    // Check for edit mode
+    // Check for edit mode - only process once
     this.route.queryParams.subscribe(params => {
       const editId = params['edit'];
       const listId = params['listId'];
       
+      // Skip if already editing and IDs haven't changed
+      if (this.editingCampaignId() && this.editingCampaignId() === editId) {
+        console.log('Already editing campaign, skipping...');
+        return;
+      }
+      
       if (editId) {
+        console.log('Edit mode detected, campaign ID:', editId);
         // Edit existing campaign
         this.loadCampaignForEdit(editId);
       } else if (listId) {
+        console.log('List ID detected:', listId);
         // Pre-select the audience for new campaign
         this.selectAudienceFromId(listId);
       }
@@ -228,61 +237,19 @@ export class CampaignWizardComponent implements OnInit {
     this.isEditing.set(true);
     this.editingCampaignId.set(campaignId);
     
+    // First, check if we already have the campaign in the service
+    const currentCampaign = this.campaignService.currentCampaign();
+    if (currentCampaign && currentCampaign.id === campaignId) {
+      console.log('Using cached campaign data:', currentCampaign);
+      this.populateFormWithCampaign(currentCampaign);
+      return;
+    }
+    
+    // If not, fetch from API
     this.campaignService.getCampaign(campaignId).subscribe({
       next: (campaign) => {
-        console.log('Campaign loaded for edit:', campaign);
-        
-        // Populate form with proper validation reset
-        this.configForm.reset({
-          subject: campaign.subject,
-          fromDisplayName: campaign.sender.replace(/@.*$/, '')
-        });
-        
-        // Mark fields as touched to show validation state
-        this.configForm.get('subject')?.markAsTouched();
-        this.configForm.get('fromDisplayName')?.markAsTouched();
-        
-        // Load design from HTML
-        const design: EmailDesign = {
-          mode: 'custom-html',
-          content: [],
-          customHtml: campaign.htmlContent || '',
-          backgroundColor: '#ffffff',
-          contentMaxWidth: 600,
-          header: { enabled: false, backgroundColor: '#ffffff', textColor: '#000000', text: '', height: 60, useImage: false, imageUrl: '' },
-          footer: { 
-            enabled: false, 
-            backgroundColor: '#f3f4f6', 
-            textColor: '#6b7280', 
-            companyName: '', 
-            address: '', 
-            phone: '', 
-            email: '', 
-            website: '', 
-            socialLinks: {},
-            customText: '', 
-            showUnsubscribe: false 
-          }
-        };
-        this.campaignDesign.set(design);
-        
-        // Load audience - ensure lists are loaded first
-        const userId = this.authService.currentUser()?.id;
-        if (userId) {
-          this.contactService.loadUserContactLists(userId);
-          // Try to set audience after loading with a delay
-          setTimeout(() => {
-            this.loadAudienceForEdit(campaign.recipientListId);
-          }, 500);
-        } else {
-          this.loadAudienceForEdit(campaign.recipientListId);
-        }
-        
-        // Start at step 0 to allow viewing all steps
-        this.currentStep.set(0);
-        
-        // Force change detection to update the template
-        this.cdr.detectChanges();
+        console.log('Campaign loaded for edit from API:', campaign);
+        this.populateFormWithCampaign(campaign);
       },
       error: (err) => {
         console.error('Error loading campaign:', err);
@@ -290,6 +257,97 @@ export class CampaignWizardComponent implements OnInit {
         this.router.navigate(['/campaigns']);
       }
     });
+  }
+
+  populateFormWithCampaign(campaign: Campaign) {
+    console.log('Populating form with campaign:', campaign);
+    
+    // Handle both 'sender' and 'senderIdentity' fields from backend
+    const senderValue = (campaign as any).senderIdentity || campaign.sender || '';
+    const senderDisplayName = senderValue.replace(/@.*$/, '');
+    
+    // Use patchValue to set form values
+    this.configForm.patchValue({
+      subject: campaign.subject,
+      fromDisplayName: senderDisplayName
+    });
+    
+    // Mark fields as touched to show validation state
+    this.configForm.get('subject')?.markAsTouched();
+    this.configForm.get('fromDisplayName')?.markAsTouched();
+    
+    // Log form values after patch
+    console.log('Form values after patch:', this.configForm.value);
+    
+    // Load design from HTML
+    // Determinar el modo: si hay contenido HTML guardado, usamos custom-html para permitir editarlo
+    const hasHtmlContent = campaign.htmlContent && campaign.htmlContent.trim().length > 0;
+    
+    const designToSet: EmailDesign = {
+      mode: hasHtmlContent ? 'custom-html' : 'template',
+      content: [],
+      customHtml: hasHtmlContent ? campaign.htmlContent : '',
+      backgroundColor: '#ffffff',
+      contentMaxWidth: 600,
+      header: { enabled: false, backgroundColor: '#ffffff', textColor: '#000000', text: '', height: 60, useImage: false, imageUrl: '' },
+      footer: { 
+        enabled: false, 
+        backgroundColor: '#f3f4f6', 
+        textColor: '#6b7280', 
+        companyName: '', 
+        address: '', 
+        phone: '', 
+        email: '', 
+        website: '', 
+        socialLinks: {},
+        customText: '', 
+        showUnsubscribe: false 
+      }
+    };
+    this.campaignDesign.set(designToSet);
+    console.log('Design set:', this.campaignDesign());
+    
+    // Load audience - ensure lists are loaded first
+    const userId = this.authService.currentUser()?.id;
+    if (userId) {
+      // First check if lists are already loaded
+      const lists = this.contactService.contactLists();
+      if (lists.length > 0) {
+        // Lists already loaded, select the audience directly
+        this.loadAudienceForEdit(campaign.recipientListId);
+      } else {
+        // Lists not loaded yet, load them and then select audience
+        this.contactService.loadUserContactLists(userId);
+        // Poll for lists to be loaded, then select the audience
+        const checkListsInterval = setInterval(() => {
+          const loadedLists = this.contactService.contactLists();
+          if (loadedLists.length > 0) {
+            clearInterval(checkListsInterval);
+            // Small delay to ensure lists are fully processed
+            setTimeout(() => {
+              this.loadAudienceForEdit(campaign.recipientListId);
+            }, 100);
+          }
+        }, 100);
+        // Fallback: if loading takes too long, still try after 2 seconds
+        setTimeout(() => {
+          clearInterval(checkListsInterval);
+          this.loadAudienceForEdit(campaign.recipientListId);
+        }, 2000);
+      }
+    } else {
+      this.loadAudienceForEdit(campaign.recipientListId);
+    }
+    
+    // Start at step 0 to allow viewing all steps
+    this.currentStep.set(0);
+    console.log('Current step set to:', this.currentStep());
+    
+    // Force change detection multiple times to ensure template updates
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.cdr.detectChanges();
+    }, 100);
   }
 
   loadAudienceForEdit(listId: string) {
@@ -397,6 +455,10 @@ export class CampaignWizardComponent implements OnInit {
         : '';
       
       switch (block.type) {
+        case 'rich-text':
+          // Usar htmlContent para texto enriquecido
+          const richContent = block.htmlContent || block.content;
+          return `<div style="${baseStyle}padding:10px 0;">${richContent}</div>`;
         case 'text':
           return `<div style="${baseStyle}padding:10px 0;">${block.content}</div>`;
         case 'image':

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ContactService } from '../../../../core/services/contact.service';
 import { AuthService } from '../../../../core/services/auth.service';
-import { ContactList } from '../../../../core/models/contact.model';
+import { ContactList, Contact } from '../../../../core/models/contact.model';
 
 @Component({
   selector: 'app-audience-step',
@@ -98,7 +98,7 @@ import { ContactList } from '../../../../core/models/contact.model';
       </div>
 
       <!-- Sin listas -->
-      @if (contactService.contactLists().length === 0 && !isLoading()) {
+      @if (contactService.contactLists().length === 0 && !contactService.loading()) {
         <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
           <p class="text-yellow-800 mb-3">No tienes ninguna lista de contactos aún.</p>
           <button (click)="toggleCreateNew()" 
@@ -109,7 +109,7 @@ import { ContactList } from '../../../../core/models/contact.model';
       }
 
       <!-- Cargando -->
-      @if (isLoading()) {
+      @if (contactService.loading()) {
         <div class="text-center py-8">
           <svg class="w-8 h-8 animate-spin mx-auto text-indigo-600" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -128,6 +128,68 @@ import { ContactList } from '../../../../core/models/contact.model';
             </svg>
             Audiencia seleccionada
           </p>
+        </div>
+
+        <!-- Ver integrantes de la lista seleccionada -->
+        <div class="border-t pt-6">
+          <button (click)="toggleShowContacts()" 
+                  class="flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-medium">
+            @if (!showContacts()) {
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+              Ver integrantes de la lista
+            } @else {
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+              Ocultar integrantes
+            }
+          </button>
+
+          @if (showContacts()) {
+            <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+              @if (isLoadingContacts()) {
+                <div class="text-center py-4">
+                  <svg class="w-6 h-6 animate-spin mx-auto text-indigo-600" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <p class="mt-2 text-sm text-gray-600">Cargando contactos...</p>
+                </div>
+              } @else if (selectedListContacts().length === 0) {
+                <p class="text-gray-500 text-center py-4">No hay contactos en esta lista</p>
+              } @else {
+                <div class="space-y-2 max-h-64 overflow-y-auto">
+                  @for (contact of selectedListContacts(); track contact.id || contact.contactId) {
+                    <div class="flex items-center justify-between p-2 bg-white rounded border">
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 truncate">
+                          {{ contact.name || 'Sin nombre' }}
+                        </p>
+                        <p class="text-xs text-gray-500 truncate">{{ contact.email }}</p>
+                      </div>
+                      @if (contact.subscribed !== undefined) {
+                        <span class="ml-2 text-xs px-2 py-1 rounded" 
+                              [class.bg-green-100]="contact.subscribed"
+                              [class.text-green-800]="contact.subscribed"
+                              [class.bg-red-100]="!contact.subscribed"
+                              [class.text-red-800]="!contact.subscribed">
+                          {{ contact.subscribed ? 'Activo' : 'Inactivo' }}
+                        </span>
+                      }
+                    </div>
+                  }
+                </div>
+                @if (selectedListContacts().length > 0) {
+                  <p class="text-xs text-gray-500 mt-2 text-center">
+                    Mostrando {{ selectedListContacts().length }} contacto(s)
+                  </p>
+                }
+              }
+            </div>
+          }
         </div>
       }
 
@@ -160,6 +222,11 @@ export class AudienceStepComponent implements OnInit {
   isLoading = signal(false);
   isCreating = signal(false);
   createError = signal('');
+  
+  // Señales para mostrar contactos de la lista seleccionada
+  selectedListContacts = signal<Contact[]>([]);
+  showContacts = signal(false);
+  isLoadingContacts = signal(false);
 
   constructor(
     public contactService: ContactService,
@@ -226,11 +293,9 @@ export class AudienceStepComponent implements OnInit {
     console.log('User ID para cargar listas:', userId);
     if (!userId) {
       console.warn('No hay usuario logueado');
-      this.isLoading.set(false);
       return;
     }
 
-    this.isLoading.set(true);
     console.log('Cargando listas para usuario:', userId);
     this.contactService.loadUserContactLists(userId);
     
@@ -249,6 +314,34 @@ export class AudienceStepComponent implements OnInit {
   onSelectList(listId: string) {
     this.selectedListId.set(listId);
     this.onListSelected.emit(listId);
+    // Resetear estado de mostrar contactos
+    this.showContacts.set(false);
+    this.selectedListContacts.set([]);
+  }
+
+  toggleShowContacts() {
+    const currentShow = this.showContacts();
+    this.showContacts.set(!currentShow);
+    
+    // Si vamos a mostrar y no hay contactos cargados, cargarlos
+    if (!currentShow && this.selectedListContacts().length === 0 && this.selectedListId()) {
+      this.loadSelectedListContacts();
+    }
+  }
+
+  loadSelectedListContacts() {
+    const listId = this.selectedListId();
+    if (!listId) return;
+    
+    this.isLoadingContacts.set(true);
+    this.contactService.getContactsFromList(listId);
+    
+    // Escuchar cambios en los contactos del servicio
+    setTimeout(() => {
+      const contacts = this.contactService.contacts();
+      this.selectedListContacts.set(contacts);
+      this.isLoadingContacts.set(false);
+    }, 500);
   }
 
   toggleCreateNew() {

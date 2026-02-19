@@ -63,7 +63,6 @@ export class CampaignService {
   }
 
   getCampaign(id: string) {
-    this._loading.set(true);
     return this.http.get<Campaign>(`${this.API_URL}/${id}`);
   }
 
