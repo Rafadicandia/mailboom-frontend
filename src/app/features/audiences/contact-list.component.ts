@@ -23,20 +23,20 @@ interface ParsedContact {
     <div class="space-y-6">
       <div class="flex justify-between items-center">
         <div>
-          <h2 class="text-2xl font-bold text-gray-900">Audiencias</h2>
-          <p class="text-gray-600">Gestiona tus listas de contactos</p>
+          <h2 class="text-xl font-semibold text-notion-text">Audiencias</h2>
+          <p class="text-sm text-notion-text-secondary">Gestiona tus listas de contactos</p>
         </div>
         <div class="flex gap-2">
           <button (click)="openImportModal()"
-                  class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  class="px-4 py-2 bg-notion-green text-white rounded-notion hover:bg-opacity-90 flex items-center gap-2 text-sm font-medium">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
             </svg>
             Importar CSV/Excel
           </button>
           <button (click)="openCreateListModal()"
-                  class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  class="px-4 py-2 bg-notion-text text-white rounded-notion hover:bg-opacity-90 flex items-center gap-2 text-sm font-medium">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
             </svg>
             Nueva Lista
@@ -46,58 +46,58 @@ interface ParsedContact {
 
       @if (isLoading()) {
         <div class="text-center py-12">
-          <svg class="w-8 h-8 animate-spin mx-auto text-indigo-600" fill="none" viewBox="0 0 24 24">
+          <svg class="w-6 h-6 animate-spin mx-auto text-notion-text-secondary" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <p class="mt-2 text-gray-600">Cargando audiencias...</p>
+          <p class="mt-2 text-notion-text-secondary">Cargando audiencias...</p>
         </div>
       } @else if (contactLists().length === 0) {
-        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-8 text-center">
-          <svg class="w-16 h-16 mx-auto text-yellow-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+        <div class="bg-notion-yellow bg-opacity-10 border border-notion-yellow border-opacity-20 rounded-notion p-8 text-center">
+          <svg class="w-12 h-12 mx-auto text-notion-yellow mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
           </svg>
-          <h3 class="text-lg font-semibold text-yellow-800 mb-2">No tienes audiencias aún</h3>
-          <p class="text-yellow-700 mb-4">Crea tu primera lista de contactos para comenzar a enviar campañas</p>
+          <h3 class="text-base font-semibold text-notion-text mb-2">No tienes audiencias aún</h3>
+          <p class="text-sm text-notion-text-secondary mb-4">Crea tu primera lista de contactos para comenzar a enviar campañas</p>
           <button (click)="openCreateListModal()"
-                  class="inline-flex items-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
+                  class="inline-flex items-center px-4 py-2 bg-notion-yellow text-white rounded-notion hover:bg-opacity-90 text-sm">
             Crear mi primera audiencia
           </button>
         </div>
       } @else {
         <div class="space-y-4">
           @for (list of contactLists(); track list.id) {
-            <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-              <div class="p-4 bg-gray-50 flex items-center justify-between">
+            <div class="bg-white border border-notion-border rounded-notion overflow-hidden hover:shadow-notion-hover transition-all">
+              <div class="p-4 bg-notion-bg-secondary flex items-center justify-between">
                 <div class="flex items-center gap-4">
-                  <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
-                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <div class="w-10 h-10 bg-notion-purple bg-opacity-10 rounded-notion flex items-center justify-center">
+                    <svg class="w-5 h-5 text-notion-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
                   </div>
                   <div>
-                    <h3 class="font-semibold text-gray-900">{{ list.name }}</h3>
-                    <p class="text-sm text-gray-500">{{ getContactCount(list) }} contactos</p>
+                    <h3 class="font-semibold text-notion-text">{{ list.name }}</h3>
+                    <p class="text-sm text-notion-text-secondary">{{ getContactCount(list) }} contactos</p>
                   </div>
                 </div>
                 <div class="flex items-center gap-2">
                   <button (click)="toggleContacts(list)"
-                          class="px-3 py-1 text-indigo-600 hover:bg-indigo-50 rounded-lg text-sm font-medium">
+                          class="px-3 py-1.5 text-primary-500 hover:bg-notion-bg-hover rounded-notion text-sm font-medium">
                     {{ expandedListId() === list.id ? 'Ocultar' : 'Ver contactos' }}
                   </button>
                   <a routerLink="/campaigns/new" [queryParams]="{listId: list.id}"
-                     class="px-3 py-1 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm">
+                     class="px-3 py-1.5 bg-notion-text text-white rounded-notion hover:bg-opacity-90 text-sm">
                     Crear campaña
                   </a>
                   <button (click)="editList(list)"
-                          class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+                          class="p-2 text-notion-text-tertiary hover:bg-notion-bg-hover rounded-notion"
                           title="Editar lista">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                     </svg>
                   </button>
                   <button (click)="deleteList(list)"
-                          class="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg"
+                          class="p-2 text-notion-text-tertiary hover:text-notion-red hover:bg-notion-red hover:bg-opacity-10 rounded-notion"
                           title="Eliminar lista">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -107,19 +107,19 @@ interface ParsedContact {
               </div>
 
               @if (expandedListId() === list.id) {
-                <div class="border-t border-gray-200 p-4">
+                <div class="border-t border-notion-border p-4">
                   <div class="flex flex-col sm:flex-row gap-4 mb-4">
                     <div class="relative flex-1">
-                      <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-notion-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                       </svg>
                       <input type="text" 
                              [(ngModel)]="searchTerm"
                              placeholder="Buscar contactos..."
-                             class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                             class="w-full pl-10 pr-4 py-2 border border-notion-border rounded-notion focus:border-primary-400 focus:ring-2 focus:ring-primary-100">
                     </div>
                     <button (click)="openAddContactModal(list.id)"
-                            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2">
+                            class="px-4 py-2 bg-notion-green text-white rounded-notion hover:bg-opacity-90 flex items-center gap-2 text-sm">
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                       </svg>
@@ -129,16 +129,16 @@ interface ParsedContact {
 
                   @if (isLoadingContacts()) {
                     <div class="text-center py-8">
-                      <svg class="w-6 h-6 animate-spin mx-auto text-indigo-600" fill="none" viewBox="0 0 24 24">
+                      <svg class="w-6 h-6 animate-spin mx-auto text-notion-text-secondary" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
                     </div>
                   } @else if (filteredContacts().length === 0) {
-                    <div class="text-center py-8 text-gray-500">
+                    <div class="text-center py-8 text-notion-text-secondary">
                       @if (contacts().length === 0) {
                         <p>No hay contactos en esta lista</p>
-                        <button (click)="openAddContactModal(list.id)" class="text-indigo-600 hover:text-indigo-700 mt-2">
+                        <button (click)="openAddContactModal(list.id)" class="text-primary-500 hover:text-primary-600 mt-2">
                           Agregar el primer contacto
                         </button>
                       } @else {
@@ -148,19 +148,19 @@ interface ParsedContact {
                   } @else {
                     <div class="overflow-x-auto">
                       <table class="w-full">
-                        <thead class="bg-gray-50">
+                        <thead class="bg-notion-bg-secondary">
                           <tr>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-notion-text-secondary uppercase">Email</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-notion-text-secondary uppercase">Nombre</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-notion-text-secondary uppercase">Estado</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-notion-text-secondary uppercase">Acciones</th>
                           </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200">
+                        <tbody class="divide-y divide-notion-border">
                           @for (contact of filteredContacts(); track $index) {
-                            <tr class="hover:bg-gray-50">
-                              <td class="px-4 py-3 text-sm text-gray-900">{{ contact.email }}</td>
-                              <td class="px-4 py-3 text-sm text-gray-900">{{ contact.name || '-' }}</td>
+                            <tr class="hover:bg-notion-bg-hover">
+                              <td class="px-4 py-3 text-sm text-notion-text">{{ contact.email }}</td>
+                              <td class="px-4 py-3 text-sm text-notion-text">{{ contact.name || '-' }}</td>
                               <td class="px-4 py-3 text-sm">
                                 @if (contact.subscribed) {
                                   <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Suscrito</span>
@@ -171,14 +171,14 @@ interface ParsedContact {
                               <td class="px-4 py-3 text-sm text-right">
                                 <div class="flex justify-end gap-2">
                                   <button (click)="editContact(contact)"
-                                          class="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded"
+                                          class="p-2 text-notion-text-tertiary hover:bg-notion-bg-hover rounded"
                                           title="Editar">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
                                   </button>
                                   <button (click)="deleteContact(contact)"
-                                          class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
+                                          class="p-2 text-notion-text-tertiary hover:text-red-600 hover:bg-red-50 rounded"
                                           title="Eliminar">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>

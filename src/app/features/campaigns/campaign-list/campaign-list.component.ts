@@ -13,12 +13,12 @@ import { Campaign } from '../../../core/models/campaign.model';
     <div class="space-y-6">
       <div class="flex justify-between items-center">
         <div>
-          <h2 class="text-2xl font-bold text-gray-900">Campañas</h2>
-          <p class="text-gray-600">Gestiona tus campañas de email marketing</p>
+          <h2 class="text-xl font-semibold text-notion-text">Campañas</h2>
+          <p class="text-sm text-notion-text-secondary">Gestiona tus campañas de email marketing</p>
         </div>
         <a routerLink="/campaigns/new"
-           class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+           class="px-4 py-2 bg-notion-text text-white rounded-notion hover:bg-opacity-90 flex items-center gap-2 text-sm font-medium">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
           </svg>
           Nueva Campaña
@@ -27,68 +27,69 @@ import { Campaign } from '../../../core/models/campaign.model';
 
       @if (isLoading()) {
         <div class="text-center py-12">
-          <svg class="w-8 h-8 animate-spin mx-auto text-indigo-600" fill="none" viewBox="0 0 24 24">
+          <svg class="w-6 h-6 animate-spin mx-auto text-notion-text-secondary" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <p class="mt-2 text-gray-600">Cargando campañas...</p>
+          <p class="mt-2 text-sm text-notion-text-secondary">Cargando campañas...</p>
         </div>
       } @else if (campaigns().length === 0) {
-        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-8 text-center">
-          <svg class="w-16 h-16 mx-auto text-yellow-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+        <div class="bg-notion-yellow bg-opacity-10 border border-notion-yellow border-opacity-20 rounded-notion p-8 text-center">
+          <svg class="w-12 h-12 mx-auto text-notion-yellow mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
           </svg>
-          <h3 class="text-lg font-semibold text-yellow-800 mb-2">No tienes campañas aún</h3>
-          <p class="text-yellow-700 mb-4">Crea tu primera campaña para comenzar a enviar emails</p>
+          <h3 class="text-base font-semibold text-notion-text mb-2">No tienes campañas aún</h3>
+          <p class="text-sm text-notion-text-secondary mb-4">Crea tu primera campaña para comenzar a enviar emails</p>
           <a routerLink="/campaigns/new"
-             class="inline-flex items-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
+             class="inline-flex items-center px-4 py-2 bg-notion-text text-white text-sm rounded-notion hover:bg-opacity-90">
             Crear mi primera campaña
           </a>
         </div>
       } @else {
         <!-- Estadísticas -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="bg-white p-4 rounded-lg border border-gray-200">
-            <p class="text-sm text-gray-600">Total</p>
-            <p class="text-2xl font-bold text-gray-900">{{ campaigns().length }}</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="bg-white border border-notion-border rounded-notion p-4">
+            <p class="text-xs text-notion-text-secondary">Total</p>
+            <p class="text-xl font-semibold text-notion-text">{{ campaigns().length }}</p>
           </div>
-          <div class="bg-white p-4 rounded-lg border border-gray-200">
-            <p class="text-sm text-gray-600">Enviadas</p>
-            <p class="text-2xl font-bold text-green-600">{{ getSentCampaigns().length }}</p>
+          <div class="bg-white border border-notion-border rounded-notion p-4">
+            <p class="text-xs text-notion-text-secondary">Enviadas</p>
+            <p class="text-xl font-semibold text-notion-green">{{ getSentCampaigns().length }}</p>
           </div>
-          <div class="bg-white p-4 rounded-lg border border-gray-200">
-            <p class="text-sm text-gray-600">Borradores</p>
-            <p class="text-2xl font-bold text-yellow-600">{{ draftCampaigns().length }}</p>
+          <div class="bg-white border border-notion-border rounded-notion p-4">
+            <p class="text-xs text-notion-text-secondary">Borradores</p>
+            <p class="text-xl font-semibold text-notion-yellow">{{ draftCampaigns().length }}</p>
           </div>
         </div>
 
         <!-- Lista de campañas -->
-        <div class="space-y-4">
+        <div class="space-y-2">
           @for (campaign of campaigns(); track campaign.id) {
-            <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+            <div class="bg-white border border-notion-border rounded-notion p-4 hover:shadow-notion-hover transition-all">
               <div class="flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                  <div class="w-12 h-12 rounded-lg flex items-center justify-center"
-                       [class.bg-green-100]="campaign.status === 'SENT'"
-                       [class.bg-yellow-100]="campaign.status === 'DRAFT'"
-                       [class.bg-blue-100]="campaign.status === 'SENDING'">
-                    <svg class="w-6 h-6"
-                         [class.text-green-600]="campaign.status === 'SENT'"
-                         [class.text-yellow-600]="campaign.status === 'DRAFT'"
-                         [class.text-blue-600]="campaign.status === 'SENDING'"
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-notion flex items-center justify-center"
+                       [class.bg-notion-green]="campaign.status === 'SENT'"
+                       [class.bg-notion-yellow]="campaign.status === 'DRAFT'"
+                       [class.bg-notion-blue]="campaign.status === 'SENDING'"
+                       [class.bg-opacity-10]="true">
+                    <svg class="w-5 h-5"
+                         [class.text-notion-green]="campaign.status === 'SENT'"
+                         [class.text-notion-yellow]="campaign.status === 'DRAFT'"
+                         [class.text-notion-blue]="campaign.status === 'SENDING'"
                          fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                     </svg>
                   </div>
                   <div>
-                    <h3 class="font-semibold text-gray-900">{{ campaign.subject }}</h3>
-                    <p class="text-sm text-gray-500">
+                    <h3 class="font-medium text-notion-text text-sm">{{ campaign.subject }}</h3>
+                    <p class="text-xs text-notion-text-tertiary">
                       {{ getStatusText(campaign.status) }} • {{ campaign.createdAt | date:'dd/MM/yyyy' }}
                     </p>
                   </div>
                 </div>
-                <div class="flex items-center gap-2">
-                  <span class="px-3 py-1 rounded-full text-xs font-medium"
+                <div class="flex items-center gap-1.5">
+                  <span class="px-2.5 py-1 rounded text-xs font-medium"
                         [class.bg-green-100]="campaign.status === 'SENT'"
                         [class.text-green-800]="campaign.status === 'SENT'"
                         [class.bg-yellow-100]="campaign.status === 'DRAFT'"
@@ -98,44 +99,41 @@ import { Campaign } from '../../../core/models/campaign.model';
                     {{ getStatusText(campaign.status) }}
                   </span>
                   
-                  <!-- Botón Editar - disponible para todas las campañas -->
+                  <!-- Botón Editar -->
                   <button (click)="editCampaign(campaign)"
-                          class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm flex items-center gap-1 transition-colors"
+                          class="px-2.5 py-1.5 bg-notion-blue text-white rounded-notion hover:bg-opacity-90 text-xs flex items-center gap-1 transition-colors"
                           title="Editar campaña">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                     </svg>
-                    Editar
                   </button>
                   
-                  <!-- Botón Preview - disponible para todas las campañas -->
+                  <!-- Botón Preview -->
                   <button (click)="previewCampaign(campaign)"
-                          class="px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm flex items-center gap-1 transition-colors"
+                          class="px-2.5 py-1.5 bg-notion-purple text-white rounded-notion hover:bg-opacity-90 text-xs flex items-center gap-1 transition-colors"
                           title="Ver previsualización">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                     </svg>
-                    Ver
                   </button>
                   
-                  <!-- Botón Enviar - disponible para borradores -->
+                  <!-- Botón Enviar -->
                   @if (campaign.status === 'DRAFT') {
                     <button (click)="sendCampaign(campaign)"
-                            class="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm flex items-center gap-1 transition-colors"
+                            class="px-2.5 py-1.5 bg-notion-green text-white rounded-notion hover:bg-opacity-90 text-xs flex items-center gap-1 transition-colors"
                             title="Enviar campaña">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                       </svg>
-                      Enviar
                     </button>
                   }
                   
                   <button (click)="deleteCampaign(campaign)"
-                          class="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                          class="p-1.5 text-notion-text-tertiary hover:text-notion-red hover:bg-notion-red hover:bg-opacity-10 rounded-notion transition-colors"
                           title="Eliminar">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                     </svg>
                   </button>
                 </div>
@@ -146,20 +144,20 @@ import { Campaign } from '../../../core/models/campaign.model';
 
         <!-- Paginación -->
         @if (campaignService.totalPages() > 1) {
-          <div class="flex justify-center items-center gap-2 mt-6">
+          <div class="flex justify-center items-center gap-2">
             <button 
               (click)="changePage(campaignService.currentPage() - 1)" 
               [disabled]="campaignService.currentPage() === 0"
-              class="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50">
+              class="px-3 py-1.5 border border-notion-border rounded-notion text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-notion-bg-hover">
               Anterior
             </button>
-            <span class="px-4 py-2 text-gray-600">
+            <span class="px-3 py-1.5 text-sm text-notion-text-secondary">
               Página {{ campaignService.currentPage() + 1 }} de {{ campaignService.totalPages() }}
             </span>
             <button 
               (click)="changePage(campaignService.currentPage() + 1)" 
               [disabled]="campaignService.currentPage() >= campaignService.totalPages() - 1"
-              class="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50">
+              class="px-3 py-1.5 border border-notion-border rounded-notion text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-notion-bg-hover">
               Siguiente
             </button>
           </div>
@@ -168,26 +166,26 @@ import { Campaign } from '../../../core/models/campaign.model';
 
       <!-- Modal de Previsualización -->
       @if (showPreview()) {
-        <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" (click)="closePreview()">
-          <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden" (click)="$event.stopPropagation()">
-            <div class="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+        <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50" (click)="closePreview()">
+          <div class="bg-white rounded-notion shadow-notion-hover w-full max-w-2xl max-h-[90vh] overflow-hidden" (click)="$event.stopPropagation()">
+            <div class="flex items-center justify-between p-4 border-b border-notion-border">
               <div>
-                <h3 class="text-lg font-semibold text-gray-900">Previsualización</h3>
-                <p class="text-sm text-gray-500">{{ previewCampaignData()?.subject }}</p>
+                <h3 class="text-base font-semibold text-notion-text">Previsualización</h3>
+                <p class="text-xs text-notion-text-secondary">{{ previewCampaignData()?.subject }}</p>
               </div>
-              <button (click)="closePreview()" class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-lg transition-colors">
+              <button (click)="closePreview()" class="p-1.5 text-notion-text-tertiary hover:bg-notion-bg-hover rounded-notion transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
               </button>
             </div>
-            <div class="border border-gray-200 rounded-lg m-4 overflow-hidden">
+            <div class="border border-notion-border rounded-notion m-4 overflow-hidden">
               <iframe [srcdoc]="previewCampaignData()?.htmlContent" 
                       class="w-full h-96 border-0"></iframe>
             </div>
-            <div class="flex justify-end gap-3 p-4 border-t border-gray-200 bg-gray-50">
+            <div class="flex justify-end gap-2 p-4 border-t border-notion-border">
               <button (click)="closePreview()"
-                      class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                      class="px-4 py-2 border border-notion-border text-notion-text rounded-notion text-sm hover:bg-notion-bg-hover transition-colors">
                 Cerrar
               </button>
             </div>
@@ -243,9 +241,7 @@ export class CampaignListComponent implements OnInit {
   }
 
   editCampaign(campaign: Campaign) {
-    // Guardar la campaña actual en el servicio
     this.campaignService.setCurrentCampaign(campaign);
-    // Navegar al editor con el ID
     this.router.navigate(['/campaigns/new'], { queryParams: { edit: campaign.id } });
   }
 
@@ -271,7 +267,6 @@ export class CampaignListComponent implements OnInit {
   }
 
   sendCampaign(campaign: Campaign) {
-    // Navegar al paso de revisión para enviar la campaña
     this.editCampaign(campaign);
   }
 }

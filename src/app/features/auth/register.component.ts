@@ -9,53 +9,52 @@ import { AuthService } from '../../core/services/auth.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
   template: `
-    <div class="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div class="max-w-md w-full space-y-8">
-        <div class="text-center">
-          <div class="mx-auto h-12 w-12 bg-indigo-600 rounded-xl flex items-center justify-center">
-            <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
+    <div class="min-h-screen bg-notion-bg-secondary flex items-center justify-center py-12 px-4">
+      <div class="max-w-md w-full">
+        <div class="text-center mb-8">
+          <div class="mx-auto h-12 w-12 bg-notion-text rounded-lg flex items-center justify-center mb-4">
+            <span class="text-white text-xl font-semibold">M</span>
           </div>
-          <h2 class="mt-6 text-3xl font-bold text-gray-900">Crea tu cuenta en Mailboom</h2>
-          <p class="mt-2 text-sm text-gray-600">
+          <h2 class="text-2xl font-semibold text-notion-text">Crea tu cuenta en Mailboom</h2>
+          <p class="text-sm text-notion-text-secondary mt-2">
             ¿Ya tienes cuenta? 
-            <a routerLink="/login" class="font-medium text-indigo-600 hover:text-indigo-500">Inicia sesión</a>
+            <a routerLink="/login" class="text-primary-500 hover:underline">Inicia sesión</a>
           </p>
         </div>
 
-        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="mt-8 space-y-6 bg-white p-8 rounded-xl shadow-sm border border-gray-200">
-          <div class="space-y-4">
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" 
+              class="bg-white border border-notion-border rounded-notion shadow-notion p-8">
+          <div class="space-y-5">
             <div>
-              <label class="block text-sm font-medium text-gray-700">Nombre completo</label>
+              <label class="block text-sm font-medium text-notion-text mb-1.5">Nombre completo</label>
               <input type="text" formControlName="name"
-                     class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                     class="w-full px-3 py-2.5 border border-notion-border rounded-notion focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
                      placeholder="Juan Pérez">
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700">Email</label>
+              <label class="block text-sm font-medium text-notion-text mb-1.5">Email</label>
               <input type="email" formControlName="email"
-                     class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                     class="w-full px-3 py-2.5 border border-notion-border rounded-notion focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
                      placeholder="tu@email.com">
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700">Contraseña</label>
+              <label class="block text-sm font-medium text-notion-text mb-1.5">Contraseña</label>
               <input type="password" formControlName="password"
-                     class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                     class="w-full px-3 py-2.5 border border-notion-border rounded-notion focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
                      placeholder="••••••••">
-              <p class="mt-1 text-xs text-gray-500">Mínimo 8 caracteres</p>
+              <p class="text-xs text-notion-text-tertiary mt-1">Mínimo 6 caracteres</p>
             </div>
-            <div class="flex items-center">
+            <div class="flex items-center gap-2">
               <input type="checkbox" formControlName="isAdmin" 
-                     class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-              <label class="ml-2 block text-sm text-gray-900">
+                     class="w-4 h-4 text-primary-500 border-notion-border rounded focus:ring-primary-100">
+              <label class="text-sm text-notion-text">
                 Registrar como Administrador
               </label>
             </div>
           </div>
 
           <button type="submit" [disabled]="registerForm.invalid"
-                  class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-300 disabled:cursor-not-allowed">
+                  class="w-full mt-6 py-2.5 bg-notion-text text-white rounded-notion font-medium hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
             Crear Cuenta
           </button>
         </form>

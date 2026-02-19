@@ -12,72 +12,72 @@ import { ContactList } from '../../../core/models/contact.model';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <div class="space-y-6">
-      <!-- Header -->
+    <div class="space-y-6 font-sans">
+      <!-- Header estilo Notion -->
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">Panel de Administración</h1>
-          <p class="text-gray-600">Gestiona usuarios, campañas y contactos de la plataforma</p>
+          <h1 class="text-3xl font-semibold text-notion-text" style="color: var(--notion-text);">Panel de Administración</h1>
+          <p class="text-notion-text-dimmed mt-1" style="color: var(--notion-text-dimmed);">Gestiona usuarios, campañas y contactos de la plataforma</p>
         </div>
         <div class="flex items-center gap-2">
-          <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
+          <span class="px-3 py-1 bg-notion-bg-secondary text-notion-text text-sm rounded" style="background-color: var(--notion-bg-secondary);">
             Administrador
           </span>
         </div>
       </div>
 
-      <!-- Stats Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+      <!-- Stats Grid estilo Notion -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="bg-white p-4 rounded border" style="background-color: white; border-color: var(--notion-border);">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-gray-600">Usuarios Totales</p>
-              <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats().totalUsers }}</p>
+              <p class="text-sm text-notion-text-dimmed" style="color: var(--notion-text-dimmed);">Usuarios Totales</p>
+              <p class="text-2xl font-semibold mt-1" style="color: var(--notion-text);">{{ stats().totalUsers }}</p>
             </div>
-            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-8 h-8 rounded flex items-center justify-center" style="background-color: var(--notion-bg-secondary);">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--notion-text);">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             </div>
           </div>
         </div>
 
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+        <div class="bg-white p-4 rounded border" style="background-color: white; border-color: var(--notion-border);">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-gray-600">Campañas Totales</p>
-              <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats().totalCampaigns }}</p>
+              <p class="text-sm text-notion-text-dimmed" style="color: var(--notion-text-dimmed);">Campañas Totales</p>
+              <p class="text-2xl font-semibold mt-1" style="color: var(--notion-text);">{{ stats().totalCampaigns }}</p>
             </div>
-            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-8 h-8 rounded flex items-center justify-center" style="background-color: var(--notion-bg-secondary);">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--notion-text);">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             </div>
           </div>
         </div>
 
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+        <div class="bg-white p-4 rounded border" style="background-color: white; border-color: var(--notion-border);">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-gray-600">Listas de Contactos</p>
-              <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats().totalContactLists }}</p>
+              <p class="text-sm text-notion-text-dimmed" style="color: var(--notion-text-dimmed);">Listas de Contactos</p>
+              <p class="text-2xl font-semibold mt-1" style="color: var(--notion-text);">{{ stats().totalContactLists }}</p>
             </div>
-            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-8 h-8 rounded flex items-center justify-center" style="background-color: var(--notion-bg-secondary);">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--notion-text);">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </div>
           </div>
         </div>
 
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+        <div class="bg-white p-4 rounded border" style="background-color: white; border-color: var(--notion-border);">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-gray-600">Contactos</p>
-              <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats().totalContacts }}</p>
+              <p class="text-sm text-notion-text-dimmed" style="color: var(--notion-text-dimmed);">Contactos</p>
+              <p class="text-2xl font-semibold mt-1" style="color: var(--notion-text);">{{ stats().totalContacts }}</p>
             </div>
-            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-              <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-8 h-8 rounded flex items-center justify-center" style="background-color: var(--notion-bg-secondary);">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--notion-text);">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
               </svg>
             </div>
@@ -85,60 +85,81 @@ import { ContactList } from '../../../core/models/contact.model';
         </div>
       </div>
 
-      <!-- Métricas de Email -->
+      <!-- Métricas de Email con Gráfico estilo Notion -->
       @if (metrics()) {
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Métricas de Email</h3>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="p-4 bg-green-50 rounded-lg">
-              <p class="text-sm font-medium text-green-600">Entregados</p>
-              <p class="text-2xl font-bold text-green-900 mt-1">{{ metrics()?.totalDelivered | number }}</p>
+        <div class="bg-white rounded border p-5" style="background-color: white; border-color: var(--notion-border);">
+          <h3 class="text-lg font-semibold mb-4" style="color: var(--notion-text);">Métricas de Email</h3>
+          
+          <!-- Gráfico de barras estilo Notion simple -->
+          <div class="flex items-end justify-around h-40 gap-4 mb-4">
+            <!-- Entregados -->
+            <div class="flex flex-col items-center flex-1">
+              <div class="w-full bg-green-500 rounded-t" [style.height.%]="getPercentage(metrics()!.totalDelivered)"></div>
+              <span class="text-xs mt-2" style="color: var(--notion-text-dimmed);">Entregados</span>
+              <span class="text-sm font-medium" style="color: var(--notion-text);">{{ metrics()?.totalDelivered | number }}</span>
             </div>
-            <div class="p-4 bg-red-50 rounded-lg">
-              <p class="text-sm font-medium text-red-600">Rebotados</p>
-              <p class="text-2xl font-bold text-red-900 mt-1">{{ metrics()?.totalBounces | number }}</p>
+            <!-- Rebotados -->
+            <div class="flex flex-col items-center flex-1">
+              <div class="w-full bg-red-400 rounded-t" [style.height.%]="getPercentage(metrics()!.totalBounces)"></div>
+              <span class="text-xs mt-2" style="color: var(--notion-text-dimmed);">Rebotados</span>
+              <span class="text-sm font-medium" style="color: var(--notion-text);">{{ metrics()?.totalBounces | number }}</span>
             </div>
-            <div class="p-4 bg-yellow-50 rounded-lg">
-              <p class="text-sm font-medium text-yellow-600">Quejas</p>
-              <p class="text-2xl font-bold text-yellow-900 mt-1">{{ metrics()?.totalComplaints | number }}</p>
+            <!-- Quejas -->
+            <div class="flex flex-col items-center flex-1">
+              <div class="w-full bg-yellow-500 rounded-t" [style.height.%]="getPercentage(metrics()!.totalComplaints)"></div>
+              <span class="text-xs mt-2" style="color: var(--notion-text-dimmed);">Quejas</span>
+              <span class="text-sm font-medium" style="color: var(--notion-text);">{{ metrics()?.totalComplaints | number }}</span>
             </div>
-            <div class="p-4 bg-gray-50 rounded-lg">
-              <p class="text-sm font-medium text-gray-600">Rechazados</p>
-              <p class="text-2xl font-bold text-gray-900 mt-1">{{ metrics()?.totalRejects | number }}</p>
+            <!-- Rechazados -->
+            <div class="flex flex-col items-center flex-1">
+              <div class="w-full bg-gray-400 rounded-t" [style.height.%]="getPercentage(metrics()!.totalRejects)"></div>
+              <span class="text-xs mt-2" style="color: var(--notion-text-dimmed);">Rechazados</span>
+              <span class="text-sm font-medium" style="color: var(--notion-text);">{{ metrics()?.totalRejects | number }}</span>
             </div>
+          </div>
+          
+          <!-- Total General -->
+          <div class="text-center pt-4 border-t" style="border-color: var(--notion-border);">
+            <span class="text-sm" style="color: var(--notion-text-dimmed);">Total de emails procesados: </span>
+            <span class="text-lg font-semibold" style="color: var(--notion-text);">
+              {{ (metrics()!.totalDelivered + metrics()!.totalBounces + metrics()!.totalComplaints + metrics()!.totalRejects) | number }}
+            </span>
           </div>
         </div>
       }
 
-      <!-- Tabs -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-        <div class="border-b border-gray-200">
-          <nav class="flex space-x-8 px-6" aria-label="Tabs">
+      <!-- Tabs estilo Notion -->
+      <div class="bg-white rounded border" style="background-color: white; border-color: var(--notion-border);">
+        <div class="border-b" style="border-color: var(--notion-border);">
+          <nav class="flex px-4" style="border-color: var(--notion-border);">
             <button 
               (click)="activeTab.set('users')"
-              class="py-4 px-1 border-b-2 font-medium text-sm transition-colors"
-              [class.border-indigo-600]="activeTab() === 'users'"
-              [class.text-indigo-600]="activeTab() === 'users'"
+              class="py-3 px-4 text-sm font-medium border-b-2 transition-colors"
+              [class.border-notion-accent]="activeTab() === 'users'"
+              [class.text-notion-accent]="activeTab() === 'users'"
               [class.border-transparent]="activeTab() !== 'users'"
-              [class.text-gray-500]="activeTab() !== 'users'">
+              [class.text-notion-text-dimmed]="activeTab() !== 'users'"
+              style="border-color: var(--notion-accent);">
               Usuarios
             </button>
             <button 
               (click)="activeTab.set('campaigns')"
-              class="py-4 px-1 border-b-2 font-medium text-sm transition-colors"
-              [class.border-indigo-600]="activeTab() === 'campaigns'"
-              [class.text-indigo-600]="activeTab() === 'campaigns'"
+              class="py-3 px-4 text-sm font-medium border-b-2 transition-colors"
+              [class.border-notion-accent]="activeTab() === 'campaigns'"
+              [class.text-notion-accent]="activeTab() === 'campaigns'"
               [class.border-transparent]="activeTab() !== 'campaigns'"
-              [class.text-gray-500]="activeTab() !== 'campaigns'">
+              [class.text-notion-text-dimmed]="activeTab() !== 'campaigns'"
+              style="border-color: var(--notion-accent);">
               Campañas
             </button>
             <button 
               (click)="activeTab.set('lists')"
-              class="py-4 px-1 border-b-2 font-medium text-sm transition-colors"
-              [class.border-indigo-600]="activeTab() === 'lists'"
-              [class.text-indigo-600]="activeTab() === 'lists'"
+              class="py-3 px-4 text-sm font-medium border-b-2 transition-colors"
+              [class.border-notion-accent]="activeTab() === 'lists'"
+              [class.text-notion-accent]="activeTab() === 'lists'"
               [class.border-transparent]="activeTab() !== 'lists'"
-              [class.text-gray-500]="activeTab() !== 'lists'">
+              [class.text-notion-text-dimmed]="activeTab() !== 'lists'"
+              style="border-color: var(--notion-accent);">
               Listas de Contactos
             </button>
           </nav>
@@ -146,58 +167,60 @@ import { ContactList } from '../../../core/models/contact.model';
 
         <!-- Users Tab -->
         @if (activeTab() === 'users') {
-          <div class="p-6">
+          <div class="p-4">
             <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-semibold text-gray-900">Gestión de Usuarios</h3>
-              <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm">
+              <h3 class="text-lg font-semibold" style="color: var(--notion-text);">Gestión de Usuarios</h3>
+              <button (click)="loadUsers()" class="px-3 py-1.5 text-sm rounded border hover:bg-notion-bg-secondary" style="border-color: var(--notion-border); color: var(--notion-text);">
                 Actualizar
               </button>
             </div>
             
             @if (loading()) {
               <div class="flex justify-center py-8">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <div class="animate-spin rounded-full h-6 w-6 border-b-2" style="border-color: var(--notion-accent);"></div>
               </div>
             } @else {
-              <div class="overflow-x-auto">
-                <table class="w-full">
+              <div class="overflow-x-auto rounded border" style="border-color: var(--notion-border);">
+                <table class="w-full text-sm">
                   <thead>
-                    <tr class="border-b border-gray-200">
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Nombre</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Email</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Plan</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Emails Enviados</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Rol</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Acciones</th>
+                    <tr class="border-b" style="border-color: var(--notion-border); background-color: var(--notion-bg-secondary);">
+                      <th class="text-left py-2.5 px-3 font-medium" style="color: var(--notion-text-dimmed);">Nombre</th>
+                      <th class="text-left py-2.5 px-3 font-medium" style="color: var(--notion-text-dimmed);">Email</th>
+                      <th class="text-left py-2.5 px-3 font-medium" style="color: var(--notion-text-dimmed);">Plan</th>
+                      <th class="text-left py-2.5 px-3 font-medium" style="color: var(--notion-text-dimmed);">Emails Enviados</th>
+                      <th class="text-left py-2.5 px-3 font-medium" style="color: var(--notion-text-dimmed);">Rol</th>
+                      <th class="text-left py-2.5 px-3 font-medium" style="color: var(--notion-text-dimmed);">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
                     @for (user of users(); track user.id) {
-                      <tr class="border-b border-gray-100 hover:bg-gray-50 cursor-pointer" (click)="viewUser(user.id)">
-                        <td class="py-3 px-4 text-sm text-gray-900">{{ user.name }}</td>
-                        <td class="py-3 px-4 text-sm text-gray-600">{{ user.email }}</td>
-                        <td class="py-3 px-4 text-sm">
-                          <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                      <tr class="border-b hover:bg-notion-bg-secondary cursor-pointer transition-colors" style="border-color: var(--notion-border);" (click)="viewUser(user.id)">
+                        <td class="py-2.5 px-3" style="color: var(--notion-text);">{{ user.name }}</td>
+                        <td class="py-2.5 px-3" style="color: var(--notion-text-dimmed);">{{ user.email }}</td>
+                        <td class="py-2.5 px-3">
+                          <span class="px-2 py-0.5 rounded text-xs font-medium"
+                                style="background-color: var(--notion-bg-secondary); color: var(--notion-text);">
                             {{ user.plan }}
                           </span>
                         </td>
-                        <td class="py-3 px-4 text-sm text-gray-600">{{ user.emailsSent }}</td>
-                        <td class="py-3 px-4 text-sm">
-                          <span class="px-2 py-1 rounded text-xs font-medium"
+                        <td class="py-2.5 px-3" style="color: var(--notion-text-dimmed);">{{ user.emailsSent }}</td>
+                        <td class="py-2.5 px-3">
+                          <span class="px-2 py-0.5 rounded text-xs font-medium"
                                 [class.bg-purple-100]="user.role === 'ADMIN'"
                                 [class.text-purple-800]="user.role === 'ADMIN'"
-                                [class.bg-gray-100]="user.role === 'USER'"
-                                [class.text-gray-800]="user.role === 'USER'">
+                                [style.background-color]="user.role === 'ADMIN' ? '#F3E8FF' : 'var(--notion-bg-secondary)'"
+                                [style.color]="user.role === 'ADMIN' ? '#7C3AED' : 'var(--notion-text)'">
                             {{ user.role }}
                           </span>
                         </td>
-                        <td class="py-3 px-4" (click)="$event.stopPropagation()">
-                          <button (click)="viewUser(user.id)" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium mr-3">
+                        <td class="py-2.5 px-3" (click)="$event.stopPropagation()">
+                          <button (click)="viewUser(user.id)" class="hover:underline text-sm mr-3" style="color: var(--notion-accent);">
                             Editar
                           </button>
                           <button 
                             (click)="deleteUser(user.id)"
-                            class="text-red-600 hover:text-red-800 text-sm font-medium">
+                            class="hover:underline text-sm"
+                            style="color: #DC2626;">
                             Eliminar
                           </button>
                         </td>
@@ -207,22 +230,24 @@ import { ContactList } from '../../../core/models/contact.model';
                 </table>
               </div>
 
-              <!-- Pagination -->
+              <!-- Pagination estilo Notion -->
               @if (usersTotalPages() > 1) {
-                <div class="flex justify-center items-center gap-2 mt-4">
+                <div class="flex justify-center items-center gap-2 mt-4 text-sm">
                   <button 
                     (click)="changeUsersPage(usersCurrentPage() - 1)" 
                     [disabled]="usersCurrentPage() === 0"
-                    class="px-3 py-1 rounded bg-gray-100 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                    class="px-3 py-1 rounded border text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    style="border-color: var(--notion-border); color: var(--notion-text);">
                     Anterior
                   </button>
-                  <span class="text-sm text-gray-600">
+                  <span style="color: var(--notion-text-dimmed);">
                     Página {{ usersCurrentPage() + 1 }} de {{ usersTotalPages() }}
                   </span>
                   <button 
                     (click)="changeUsersPage(usersCurrentPage() + 1)" 
                     [disabled]="usersCurrentPage() >= usersTotalPages() - 1"
-                    class="px-3 py-1 rounded bg-gray-100 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                    class="px-3 py-1 rounded border text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    style="border-color: var(--notion-border); color: var(--notion-text);">
                     Siguiente
                   </button>
                 </div>
@@ -233,55 +258,52 @@ import { ContactList } from '../../../core/models/contact.model';
 
         <!-- Campaigns Tab -->
         @if (activeTab() === 'campaigns') {
-          <div class="p-6">
+          <div class="p-4">
             <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-semibold text-gray-900">Todas las Campañas</h3>
-              <button (click)="loadCampaigns()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm">
+              <h3 class="text-lg font-semibold" style="color: var(--notion-text);">Todas las Campañas</h3>
+              <button (click)="loadCampaigns()" class="px-3 py-1.5 text-sm rounded border hover:bg-notion-bg-secondary" style="border-color: var(--notion-border); color: var(--notion-text);">
                 Actualizar
               </button>
             </div>
             
             @if (loading()) {
               <div class="flex justify-center py-8">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <div class="animate-spin rounded-full h-6 w-6 border-b-2" style="border-color: var(--notion-accent);"></div>
               </div>
             } @else {
-              <div class="overflow-x-auto">
-                <table class="w-full">
+              <div class="overflow-x-auto rounded border" style="border-color: var(--notion-border);">
+                <table class="w-full text-sm">
                   <thead>
-                    <tr class="border-b border-gray-200">
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Asunto</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Propietario</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Remitente</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Estado</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Fecha</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Acciones</th>
+                    <tr class="border-b" style="border-color: var(--notion-border); background-color: var(--notion-bg-secondary);">
+                      <th class="text-left py-2.5 px-3 font-medium" style="color: var(--notion-text-dimmed);">Asunto</th>
+                      <th class="text-left py-2.5 px-3 font-medium" style="color: var(--notion-text-dimmed);">Propietario</th>
+                      <th class="text-left py-2.5 px-3 font-medium" style="color: var(--notion-text-dimmed);">Remitente</th>
+                      <th class="text-left py-2.5 px-3 font-medium" style="color: var(--notion-text-dimmed);">Estado</th>
+                      <th class="text-left py-2.5 px-3 font-medium" style="color: var(--notion-text-dimmed);">Fecha</th>
+                      <th class="text-left py-2.5 px-3 font-medium" style="color: var(--notion-text-dimmed);">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
                     @for (campaign of campaigns(); track campaign.id) {
-                      <tr class="border-b border-gray-100 hover:bg-gray-50">
-                        <td class="py-3 px-4 text-sm text-gray-900">{{ campaign.subject }}</td>
-                        <td class="py-3 px-4 text-sm text-gray-600">{{ getUserName(campaign.ownerId) }}</td>
-                        <td class="py-3 px-4 text-sm text-gray-600">{{ campaign.sender || 'N/A' }}</td>
-                        <td class="py-3 px-4 text-sm">
-                          <span class="px-2 py-1 rounded text-xs font-medium"
-                                [class.bg-green-100]="campaign.status === 'SENT'"
-                                [class.text-green-800]="campaign.status === 'SENT'"
-                                [class.bg-yellow-100]="campaign.status === 'DRAFT'"
-                                [class.text-yellow-800]="campaign.status === 'DRAFT'"
-                                [class.bg-blue-100]="campaign.status === 'SENDING'"
-                                [class.text-blue-800]="campaign.status === 'SENDING'">
+                      <tr class="border-b hover:bg-notion-bg-secondary transition-colors" style="border-color: var(--notion-border);">
+                        <td class="py-2.5 px-3" style="color: var(--notion-text);">{{ campaign.subject }}</td>
+                        <td class="py-2.5 px-3" style="color: var(--notion-text-dimmed);">{{ getUserName(campaign.ownerId) }}</td>
+                        <td class="py-2.5 px-3" style="color: var(--notion-text-dimmed);">{{ campaign.sender || 'N/A' }}</td>
+                        <td class="py-2.5 px-3">
+                          <span class="px-2 py-0.5 rounded text-xs font-medium"
+                                [style.background-color]="campaign.status === 'SENT' ? '#DCFCE7' : campaign.status === 'DRAFT' ? '#FEF3C7' : campaign.status === 'SENDING' ? '#DBEAFE' : 'var(--notion-bg-secondary)'"
+                                [style.color]="campaign.status === 'SENT' ? '#16A34A' : campaign.status === 'DRAFT' ? '#D97706' : campaign.status === 'SENDING' ? '#2563EB' : 'var(--notion-text)'">
                             {{ getStatusText(campaign.status) }}
                           </span>
                         </td>
-                        <td class="py-3 px-4 text-sm text-gray-600">
+                        <td class="py-2.5 px-3 text-sm" style="color: var(--notion-text-dimmed);">
                           {{ campaign.createdAt | date:'dd/MM/yyyy HH:mm' }}
                         </td>
-                        <td class="py-3 px-4">
+                        <td class="py-2.5 px-3">
                           <button 
                             (click)="deleteCampaign(campaign.id)"
-                            class="text-red-600 hover:text-red-800 text-sm font-medium">
+                            class="hover:underline text-sm"
+                            style="color: #DC2626;">
                             Eliminar
                           </button>
                         </td>
@@ -291,22 +313,24 @@ import { ContactList } from '../../../core/models/contact.model';
                 </table>
               </div>
 
-              <!-- Pagination -->
+              <!-- Pagination estilo Notion -->
               @if (campaignsTotalPages() > 1) {
-                <div class="flex justify-center items-center gap-2 mt-4">
+                <div class="flex justify-center items-center gap-2 mt-4 text-sm">
                   <button 
                     (click)="changeCampaignsPage(campaignsCurrentPage() - 1)" 
                     [disabled]="campaignsCurrentPage() === 0"
-                    class="px-3 py-1 rounded bg-gray-100 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                    class="px-3 py-1 rounded border text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    style="border-color: var(--notion-border); color: var(--notion-text);">
                     Anterior
                   </button>
-                  <span class="text-sm text-gray-600">
+                  <span style="color: var(--notion-text-dimmed);">
                     Página {{ campaignsCurrentPage() + 1 }} de {{ campaignsTotalPages() }}
                   </span>
                   <button 
                     (click)="changeCampaignsPage(campaignsCurrentPage() + 1)" 
                     [disabled]="campaignsCurrentPage() >= campaignsTotalPages() - 1"
-                    class="px-3 py-1 rounded bg-gray-100 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                    class="px-3 py-1 rounded border text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    style="border-color: var(--notion-border); color: var(--notion-text);">
                     Siguiente
                   </button>
                 </div>
@@ -319,40 +343,41 @@ import { ContactList } from '../../../core/models/contact.model';
         @if (activeTab() === 'lists') {
           <div class="p-6">
             <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-semibold text-gray-900">Listas de Contactos</h3>
-              <button (click)="loadContactLists()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm">
+              <h3 class="text-lg font-semibold" style="color: var(--notion-text);">Listas de Contactos</h3>
+              <button (click)="loadContactLists()" class="px-3 py-1.5 text-sm rounded border hover:bg-notion-bg-secondary" style="border-color: var(--notion-border); color: var(--notion-text);">
                 Actualizar
               </button>
             </div>
             
             @if (loading()) {
               <div class="flex justify-center py-8">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <div class="animate-spin rounded-full h-6 w-6 border-b-2" style="border-color: var(--notion-accent);"></div>
               </div>
             } @else {
-              <div class="overflow-x-auto">
-                <table class="w-full">
+              <div class="overflow-x-auto rounded border" style="border-color: var(--notion-border);">
+                <table class="w-full text-sm">
                   <thead>
-                    <tr class="border-b border-gray-200">
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Nombre</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Propietario</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Total Contactos</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Acciones</th>
+                    <tr class="border-b" style="border-color: var(--notion-border); background-color: var(--notion-bg-secondary);">
+                      <th class="text-left py-2.5 px-3 font-medium" style="color: var(--notion-text-dimmed);">Nombre</th>
+                      <th class="text-left py-2.5 px-3 font-medium" style="color: var(--notion-text-dimmed);">Propietario</th>
+                      <th class="text-left py-2.5 px-3 font-medium" style="color: var(--notion-text-dimmed);">Total Contactos</th>
+                      <th class="text-left py-2.5 px-3 font-medium" style="color: var(--notion-text-dimmed);">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
                     @for (list of contactLists(); track list.id) {
-                      <tr class="border-b border-gray-100 hover:bg-gray-50">
-                        <td class="py-3 px-4 text-sm text-gray-900">{{ list.name }}</td>
-                        <td class="py-3 px-4 text-sm text-gray-600">{{ getUserName(list.ownerId) }}</td>
-                        <td class="py-3 px-4 text-sm text-gray-600">{{ getContactsCount(list.id) }}</td>
-                        <td class="py-3 px-4">
-                          <button (click)="viewContacts(list.id)" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium mr-3">
+                      <tr class="border-b hover:bg-notion-bg-secondary transition-colors" style="border-color: var(--notion-border);">
+                        <td class="py-2.5 px-3" style="color: var(--notion-text);">{{ list.name }}</td>
+                        <td class="py-2.5 px-3" style="color: var(--notion-text-dimmed);">{{ getUserName(list.ownerId) }}</td>
+                        <td class="py-2.5 px-3" style="color: var(--notion-text-dimmed);">{{ getContactsCount(list.id) }}</td>
+                        <td class="py-2.5 px-3">
+                          <button (click)="viewContacts(list.id)" class="hover:underline text-sm mr-3" style="color: var(--notion-accent);">
                             Ver
                           </button>
                           <button 
                             (click)="deleteContactList(list.id)"
-                            class="text-red-600 hover:text-red-800 text-sm font-medium">
+                            class="hover:underline text-sm"
+                            style="color: #DC2626;">
                             Eliminar
                           </button>
                         </td>
@@ -362,22 +387,24 @@ import { ContactList } from '../../../core/models/contact.model';
                 </table>
               </div>
 
-              <!-- Pagination -->
+              <!-- Pagination estilo Notion -->
               @if (listsTotalPages() > 1) {
-                <div class="flex justify-center items-center gap-2 mt-4">
+                <div class="flex justify-center items-center gap-2 mt-4 text-sm">
                   <button 
                     (click)="changeListsPage(listsCurrentPage() - 1)" 
                     [disabled]="listsCurrentPage() === 0"
-                    class="px-3 py-1 rounded bg-gray-100 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                    class="px-3 py-1 rounded border text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    style="border-color: var(--notion-border); color: var(--notion-text);">
                     Anterior
                   </button>
-                  <span class="text-sm text-gray-600">
+                  <span style="color: var(--notion-text-dimmed);">
                     Página {{ listsCurrentPage() + 1 }} de {{ listsTotalPages() }}
                   </span>
                   <button 
                     (click)="changeListsPage(listsCurrentPage() + 1)" 
                     [disabled]="listsCurrentPage() >= listsTotalPages() - 1"
-                    class="px-3 py-1 rounded bg-gray-100 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                    class="px-3 py-1 rounded border text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    style="border-color: var(--notion-border); color: var(--notion-text);">
                     Siguiente
                   </button>
                 </div>
@@ -423,6 +450,14 @@ export class AdminDashboardComponent implements OnInit {
 
   getContactsCount(listId: string): number {
     return this.contactsCountMap.get(listId) || 0;
+  }
+
+  getPercentage(value: number): number {
+    const m = this.metrics();
+    if (!m) return 0;
+    const total = m.totalDelivered + m.totalBounces + m.totalComplaints + m.totalRejects;
+    if (total === 0) return 0;
+    return (value / total) * 100;
   }
 
   ngOnInit() {

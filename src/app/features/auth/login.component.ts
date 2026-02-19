@@ -9,41 +9,40 @@ import { AuthService } from '../../core/services/auth.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
   template: `
-    <div class="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
-      <div class="max-w-md w-full space-y-8">
-        <div class="text-center">
-          <div class="mx-auto h-12 w-12 bg-indigo-600 rounded-xl flex items-center justify-center">
-            <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
+    <div class="min-h-screen bg-notion-bg-secondary flex items-center justify-center py-12 px-4">
+      <div class="max-w-md w-full">
+        <div class="text-center mb-8">
+          <div class="mx-auto h-12 w-12 bg-notion-text rounded-lg flex items-center justify-center mb-4">
+            <span class="text-white text-xl font-semibold">M</span>
           </div>
-          <h2 class="mt-6 text-3xl font-bold text-gray-900">Inicia sesión en Mailboom</h2>
+          <h2 class="text-2xl font-semibold text-notion-text">Inicia sesión en Mailboom</h2>
         </div>
 
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="mt-8 space-y-6 bg-white p-8 rounded-xl shadow-sm border border-gray-200">
-          <div class="space-y-4">
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" 
+              class="bg-white border border-notion-border rounded-notion shadow-notion p-8">
+          <div class="space-y-5">
             <div>
-              <label class="block text-sm font-medium text-gray-700">Email</label>
+              <label class="block text-sm font-medium text-notion-text mb-1.5">Email</label>
               <input type="email" formControlName="email" 
-                     class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                     class="w-full px-3 py-2.5 border border-notion-border rounded-notion focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
                      placeholder="tu@email.com">
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700">Contraseña</label>
+              <label class="block text-sm font-medium text-notion-text mb-1.5">Contraseña</label>
               <input type="password" formControlName="password"
-                     class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                     class="w-full px-3 py-2.5 border border-notion-border rounded-notion focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
                      placeholder="••••••••">
             </div>
           </div>
 
           <button type="submit" [disabled]="loginForm.invalid"
-                  class="w-full py-3 px-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed">
+                  class="w-full mt-6 py-2.5 bg-notion-text text-white rounded-notion font-medium hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
             Iniciar Sesión
           </button>
           
-          <p class="text-center text-sm text-gray-600">
+          <p class="text-center text-sm text-notion-text-secondary mt-5">
             ¿No tienes cuenta? 
-            <a routerLink="/register" class="text-indigo-600 hover:text-indigo-500">Regístrate</a>
+            <a routerLink="/register" class="text-primary-500 hover:underline">Regístrate</a>
           </p>
         </form>
       </div>

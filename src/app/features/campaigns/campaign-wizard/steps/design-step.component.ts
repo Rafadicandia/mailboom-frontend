@@ -46,7 +46,7 @@ import { QuillEditorComponent } from '../../../../shared/components/quill-editor
             <h3 class="text-lg font-semibold text-gray-900">Tu código HTML</h3>
           </div>
           
-          <textarea [(ngModel)]="customHtml" rows="15" class="w-full p-4 font-mono text-sm bg-gray-900 text-green-400 rounded-lg resize-none" placeholder="<!-- Pega tu HTML aquí -->"></textarea>
+          <textarea [ngModel]="customHtml()" (ngModelChange)="onCustomHtmlChange($event)" rows="15" class="w-full p-4 font-mono text-sm bg-gray-900 text-green-400 rounded-lg resize-none" placeholder="<!-- Pega tu HTML aquí -->"></textarea>
           
           <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
             💡 Tip: Usa variables como {{ '{{name}}' }}, {{ '{{email}}' }} para personalizar
@@ -649,7 +649,7 @@ export class DesignStepComponent implements OnInit, OnChanges {
       // Limpiar HTML actual si hay uno en el campo (mantener solo caché)
       this.customHtml.set('');
     } else {
-      // Usar HTML - obtener de campo actual o caché
+      // Usar HTML - obtener de campo actual o caché (sin sanitizar)
       const htmlToUse = this.customHtml() || this.cachedHtml();
       this.customHtml.set(htmlToUse);
       this.mode.set('custom-html');
@@ -674,7 +674,7 @@ export class DesignStepComponent implements OnInit, OnChanges {
   }
 
   switchToHtmlMode() {
-    // Copiar el HTML guardado al campo de customHtml
+    // Copiar el HTML guardado al campo de customHtml (sin sanitizar)
     if (this.cachedHtml()) {
       this.customHtml.set(this.cachedHtml());
     }
@@ -936,16 +936,68 @@ export class DesignStepComponent implements OnInit, OnChanges {
     }, 100);
   }
 
+  onCustomHtmlChange(value: string) {
+    this.customHtml.set(value);
+    this.refreshPreview();
+  }
+
   getCustomHtmlPreview(): string {
-    let html = this.customHtml();
-    const sampleData = { name: 'Juan Pérez', email: 'juan@ejemplo.com', unsubscribe_link: '#' };
-    Object.entries(sampleData).forEach(([key, value]) => {
-      html = html.replace(new RegExp(`{{${key}}}`, 'g'), value);
+    // Retornar el HTML tal cual, sin modificaciones de ningún tipo
+    return this.customHtml();
+  }
+
+  /**
+   * Sanitiza el HTML para que sea compatible con clientes de correo electrónico
+   * Los clientes de correo (especialmente Outlook) tienen soporte limitado para CSS moderno
+   * Esta función preserva el HTML del usuario y solo hace correcciones mínimas necesarias
+   */
+  sanitizeHtmlForEmail(html: string): string {
+    if (!html || html.trim().length === 0) {
+      return html;
+    }
+
+    // 1. NO eliminar los estilos del <style> - preservarlos ya que Gmail/Apple Mail los soportan
+    // Solo hacemos correcciones mínimas
+
+    // 2. Verificar y agregar DOCTYPE si no existe
+    if (!html.toLowerCase().includes('<!doctype html>')) {
+      html = '<!DOCTYPE html>' + html;
+    }
+
+    // 3. Agregar meta viewport si no existe (importante para móviles)
+    if (!html.includes('viewport')) {
+      html = html.replace(/<head>/i, '<head><meta name="viewport" content="width=device-width, initial-scale=1.0">');
+    }
+
+    // 4. Asegurar que las imágenes tengan estilos responsive
+    html = html.replace(/<img([^>]*)>/gi, (match, attrs) => {
+      // Si ya tiene style, no modificar
+      if (attrs.includes('style=')) {
+        return match;
+      }
+      return `<img${attrs} style="max-width:100%;height:auto;">`;
     });
+
+    // 5. Eliminar JavaScript (no se ejecuta en emails y puede causar problemas)
+    html = html.replace(/<script[\s\S]*?<\/script>/gi, '');
+
+    // 6. Los comentarios condicionales de IE pueden mantenerse o eliminarse
+    // Por seguridad, los mantenemos ya que el HTML del usuario ya los tiene correctamente
+
+    // 7. Agregar preheader si no existe (texto oculto que aparece antes de abrir)
+    if (!html.includes('preheader') && !html.includes('display:none')) {
+      html = html.replace(/<body[^>]*>/i, '<body><div style="display:none;font-size:1px;color:#fefefe;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">Email de Mailboom</div>');
+    }
+
     return html;
   }
 
   getFinalHtml(): string {
+    // Si hay contenido HTML personalizado existente, mostrarlo tal cual
+    if (this.customHtml() && this.customHtml().trim().length > 0) {
+      return this.customHtml();
+    }
+
     if (this.mode() === 'custom-html') {
       return this.getCustomHtmlPreview();
     }
