@@ -1,8 +1,9 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { CampaignService } from '../../../core/services/campaign.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { AdminService } from '../../../core/services/admin.service';
 import { Campaign } from '../../../core/models/campaign.model';
 
 @Component({
@@ -143,20 +144,20 @@ import { Campaign } from '../../../core/models/campaign.model';
         </div>
 
         <!-- Paginación -->
-        @if (campaignService.totalPages() > 1) {
+        @if (totalPages() > 1) {
           <div class="flex justify-center items-center gap-2">
             <button 
-              (click)="changePage(campaignService.currentPage() - 1)" 
-              [disabled]="campaignService.currentPage() === 0"
+              (click)="changePage(currentPage() - 1)" 
+              [disabled]="currentPage() === 0"
               class="px-3 py-1.5 border border-notion-border rounded-notion text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-notion-bg-hover">
               Anterior
             </button>
             <span class="px-3 py-1.5 text-sm text-notion-text-secondary">
-              Página {{ campaignService.currentPage() + 1 }} de {{ campaignService.totalPages() }}
+              Página {{ currentPage() + 1 }} de {{ totalPages() }}
             </span>
             <button 
-              (click)="changePage(campaignService.currentPage() + 1)" 
-              [disabled]="campaignService.currentPage() >= campaignService.totalPages() - 1"
+              (click)="changePage(currentPage() + 1)" 
+              [disabled]="currentPage() >= totalPages() - 1"
               class="px-3 py-1.5 border border-notion-border rounded-notion text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-notion-bg-hover">
               Siguiente
             </button>
@@ -198,36 +199,82 @@ import { Campaign } from '../../../core/models/campaign.model';
 export class CampaignListComponent implements OnInit {
   campaignService = inject(CampaignService);
   private authService = inject(AuthService);
+  private adminService = inject(AdminService);
   private router = inject(Router);
 
-  campaigns = this.campaignService.campaigns;
-  draftCampaigns = this.campaignService.draftCampaigns;
-  isLoading = this.campaignService.loading;
+  // Signals locales para manejar las campañas (especialmente para admin)
+  private _campaigns = signal<Campaign[]>([]);
+  private _loading = signal(false);
+  private _currentPage = signal(0);
+  private _totalPages = signal(0);
+  
+  // Exponer las campañas - usar las locales si es admin, si no las del servicio
+  campaigns = computed(() => this.isAdmin() ? this._campaigns() : this.campaignService.campaigns());
+  draftCampaigns = computed(() => this.campaigns().filter(c => c.status === 'DRAFT'));
+  isLoading = computed(() => this.isAdmin() ? this._loading() : this.campaignService.loading());
+  currentPage = computed(() => this.isAdmin() ? this._currentPage() : this.campaignService.currentPage());
+  totalPages = computed(() => this.isAdmin() ? this._totalPages() : this.campaignService.totalPages());
   showPreview = signal(false);
   previewCampaignData = signal<Campaign | null>(null);
+  isAdmin = this.authService.isAdmin;
 
   ngOnInit() {
     this.loadCampaigns();
   }
 
   loadCampaigns() {
-    const userId = this.authService.currentUser()?.id;
-    console.log('📋 CAMPAIGN-LIST - currentUser():', this.authService.currentUser());
-    console.log('📋 CAMPAIGN-LIST - userId:', userId);
-    if (userId) {
-      this.campaignService.loadUserCampaigns(userId);
+    if (this.isAdmin()) {
+      // Si es admin, cargar todas las campañas
+      this._loading.set(true);
+      this.adminService.getCampaigns(0, 10).subscribe({
+        next: (response) => {
+          this._campaigns.set(response.content);
+          this._currentPage.set(response.number || 0);
+          this._totalPages.set(response.totalPages || 1);
+          this._loading.set(false);
+        },
+        error: (err) => {
+          console.error('Error cargando campañas de admin:', err);
+          this._loading.set(false);
+        }
+      });
+    } else {
+      // Si no es admin, cargar solo las campañas del usuario
+      const userId = this.authService.currentUser()?.id;
+      console.log('📋 CAMPAIGN-LIST - currentUser():', this.authService.currentUser());
+      console.log('📋 CAMPAIGN-LIST - userId:', userId);
+      if (userId) {
+        this.campaignService.loadUserCampaigns(userId);
+      }
     }
   }
 
   changePage(page: number) {
-    const userId = this.authService.currentUser()?.id;
-    if (userId && page >= 0) {
-      this.campaignService.loadUserCampaigns(userId, page, 10);
+    if (this.isAdmin()) {
+      // Si es admin, cargar la página de todas las campañas
+      if (page < 0 || page >= this._totalPages()) return;
+      this._loading.set(true);
+      this.adminService.getCampaigns(page, 10).subscribe({
+        next: (response) => {
+          this._campaigns.set(response.content);
+          this._currentPage.set(response.number || page);
+          this._loading.set(false);
+        },
+        error: (err) => {
+          console.error('Error cargando campañas:', err);
+          this._loading.set(false);
+        }
+      });
+    } else {
+      const userId = this.authService.currentUser()?.id;
+      if (userId && page >= 0) {
+        this.campaignService.loadUserCampaigns(userId, page, 10);
+      }
     }
   }
 
   getSentCampaigns(): Campaign[] {
-    return this.campaignService.campaigns().filter(c => c.status === 'SENT');
+    return this.campaigns().filter(c => c.status === 'SENT');
   }
 
   getStatusText(status: string): string {
@@ -258,12 +305,23 @@ export class CampaignListComponent implements OnInit {
   deleteCampaign(campaign: Campaign) {
     if (!confirm(`¿Estás seguro de eliminar "${campaign.subject}"?`)) return;
     
-    this.campaignService.deleteCampaign(campaign.id).subscribe({
-      next: () => {
-        this.campaignService.removeCampaignFromList(campaign.id);
-      },
-      error: (err: any) => alert(err.error?.message || 'Error al eliminar')
-    });
+    if (this.isAdmin()) {
+      // Si es admin, usar AdminService para eliminar
+      this.adminService.deleteCampaign(campaign.id).subscribe({
+        next: () => {
+          this._campaigns.update(list => list.filter(c => c.id !== campaign.id));
+        },
+        error: (err: any) => alert(err.error?.message || 'Error al eliminar')
+      });
+    } else {
+      // Si no es admin, usar CampaignService
+      this.campaignService.deleteCampaign(campaign.id).subscribe({
+        next: () => {
+          this.campaignService.removeCampaignFromList(campaign.id);
+        },
+        error: (err: any) => alert(err.error?.message || 'Error al eliminar')
+      });
+    }
   }
 
   sendCampaign(campaign: Campaign) {
