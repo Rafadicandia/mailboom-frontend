@@ -10,6 +10,7 @@ import { AudienceStepComponent } from './steps/audience-step.component';
 import { NewCampaignRequest, Campaign } from '../../../core/models/campaign.model';
 import { ContactList } from '../../../core/models/contact.model';
 import { ContactService } from '../../../core/services/contact.service';
+import { ConfirmDialogComponent, ConfirmDialogData } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 type WizardStep = 0 | 1 | 2 | 3;
 
@@ -30,37 +31,34 @@ const fromDisplayNameValidators = [
 @Component({
   selector: 'app-campaign-wizard',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, JsonPipe, DesignStepComponent, AudienceStepComponent],
+  imports: [CommonModule, ReactiveFormsModule, JsonPipe, DesignStepComponent, AudienceStepComponent, ConfirmDialogComponent],
   template: `
-    <div class="max-w-4xl mx-auto">
+    <div [class]="currentStep() === 1 ? 'w-full px-0 py-0' : 'max-w-3xl mx-auto px-6 py-10'">
+      <!-- Stepper horizontal sobre el título -->
       <div class="mb-8">
-        <h2 class="text-3xl font-bold text-gray-900">{{ isEditing() ? 'Editar Campaña' : 'Nueva Campaña' }}</h2>
-        <p class="text-gray-600 mt-1">{{ isEditing() ? 'Modifica tu campaña existente' : 'Crea y guarda tu campaña como borrador' }}</p>
-      </div>
-
-      <!-- Stepper -->
-      <div class="mb-8">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-center gap-2">
           @for (step of stepLabels; track $index) {
             <div class="flex items-center" [class.flex-1]="$index < stepLabels.length - 1">
               <div class="flex flex-col items-center">
-                <div class="w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all"
-                     [class.bg-indigo-600]="currentStep() === $index"
+                <div class="w-10 h-10 rounded-full flex items-center justify-center font-medium text-sm transition-all"
+                     [class.bg-notion-text]="currentStep() === $index"
                      [class.text-white]="currentStep() === $index"
-                     [class.bg-green-600]="currentStep() > $index"
-                     [class.bg-gray-200]="currentStep() < $index">
+                     [class.bg-notion-green]="currentStep() > $index"
+                     [class.text-white]="currentStep() > $index"
+                     [class.bg-notion-bg-hover]="currentStep() < $index"
+                     [class.text-notion-text-secondary]="currentStep() < $index">
                   @if (currentStep() > $index) { ✓ } @else { {{ $index + 1 }} }
                 </div>
-                <span class="mt-2 text-xs font-medium hidden sm:block" 
-                      [class.text-indigo-600]="currentStep() === $index"
-                      [class.text-gray-500]="currentStep() !== $index">
+                <span class="mt-3 text-sm font-medium" 
+                      [class.text-notion-text]="currentStep() === $index"
+                      [class.text-notion-text-secondary]="currentStep() !== $index">
                   {{ step }}
                 </span>
               </div>
               @if ($index < stepLabels.length - 1) {
-                <div class="flex-1 h-1 mx-4 rounded-full transition-all"
-                     [class.bg-indigo-600]="currentStep() > $index"
-                     [class.bg-gray-200]="currentStep() <= $index">
+                <div class="flex-1 h-0.5 mx-4 transition-all"
+                     [class.bg-notion-text]="currentStep() > $index"
+                     [class.bg-notion-border]="currentStep() <= $index">
                 </div>
               }
             </div>
@@ -68,42 +66,35 @@ const fromDisplayNameValidators = [
         </div>
       </div>
 
+      <!-- Header -->
+      <div class="mb-12">
+        <h2 class="text-2xl font-semibold text-notion-text text-center">{{ isEditing() ? 'Editar Campaña' : 'Nueva Campaña' }}</h2>
+        <p class="text-sm text-notion-text-secondary mt-3 text-center">{{ isEditing() ? 'Modifica tu campaña existente' : 'Crea y guarda tu campaña como borrador' }}</p>
+      </div>
+
       <!-- Contenido -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         
         <!-- PASO 1: CONFIG -->
         @if (currentStep() === 0) {
-          <!-- Debug: {{ configForm.value | json }} -->
-          <form [formGroup]="configForm" class="space-y-6">
-            <div>
-              <h3 class="text-lg font-semibold text-gray-900 mb-1">Configuración Básica</h3>
-              <p class="text-sm text-gray-600">Define el asunto y remitente</p>
-            </div>
-
-            <div class="space-y-2">
-              <label class="block text-sm font-medium text-gray-700">Asunto <span class="text-red-500">*</span></label>
-              <input type="text" formControlName="subject" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+          <form [formGroup]="configForm" class="max-w-xl mx-auto pt-8">
+            
+            <div class="space-y-8">
+              <input type="text" formControlName="subject" placeholder="Asunto del email" 
+                     class="w-full text-xl border-0 border-b-2 border-notion-border focus:border-notion-text focus:ring-0 px-2 py-3 bg-transparent placeholder:text-notion-text-tertiary text-left"
                      [class.border-red-500]="configForm.get('subject')?.invalid && configForm.get('subject')?.touched"
                      maxlength="150">
-              <div class="flex justify-between text-xs">
-                <span class="text-gray-500">{{ configForm.get('subject')?.value?.length || 0 }}/150</span>
-              </div>
             </div>
 
-            <div class="space-y-2">
-              <label class="block text-sm font-medium text-gray-700">Nombre del Remitente <span class="text-red-500">*</span></label>
-              <div class="relative">
-                <input type="text" formControlName="fromDisplayName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 pr-36">
-                <span class="absolute right-3 top-2 text-gray-400 text-sm bg-white pl-2">&#64;mailboom.email</span>
-              </div>
-              <div class="flex justify-between text-xs">
-                <span class="text-gray-500">{{ configForm.get('fromDisplayName')?.value?.length || 0 }}/36</span>
-              </div>
+            <div class="flex items-center justify-left gap-2 text-base text-notion-text-secondary mt-6 mb-12">
+              <span>De:</span>
+              <input type="text" formControlName="fromDisplayName" placeholder="Tu nombre" 
+                     class="w-40 border-0 border-b-2 border-notion-border focus:border-notion-text focus:ring-0 px-2 py-2 bg-transparent placeholder:text-notion-text-tertiary text-notion-text text-center">
+              <span class="text-notion-text-tertiary">&#64;mailboom.email</span>
             </div>
 
-            <div class="flex justify-end pt-4">
+            <div class="flex justify-center pt-4">
               <button type="button" (click)="nextStep()" [disabled]="!configForm.valid" 
-                      class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300">
+                      class="px-5 py-2 bg-notion-text text-white rounded-notion hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium">
                 Siguiente →
               </button>
             </div>
@@ -133,49 +124,49 @@ const fromDisplayNameValidators = [
         @if (currentStep() === 3) {
           <div class="space-y-6">
             <div>
-              <h3 class="text-lg font-semibold text-gray-900 mb-1">Revisión Final</h3>
-              <p class="text-sm text-gray-600">Tu campaña está lista para enviar o guardar</p>
+              <h3 class="text-base font-semibold text-notion-text mb-1">Revisión Final</h3>
+              <p class="text-sm text-notion-text-secondary">Tu campaña está lista para enviar o guardar</p>
             </div>
 
-            <div class="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
-              <p><span class="text-gray-600">Asunto:</span> <span class="font-medium">{{ configForm.value.subject }}</span></p>
-              <p><span class="text-gray-600">Remitente:</span> <span class="font-medium">{{ configForm.value.fromDisplayName }}&#64;mailboom.email</span></p>
-              <p><span class="text-gray-600">Modo:</span> <span class="font-medium">{{ campaignDesign()?.mode === 'custom-html' ? 'HTML personalizado' : 'Diseñador visual' }}</span></p>
+            <div class="bg-notion-bg-secondary rounded-notion p-4 border border-notion-border space-y-2 text-sm">
+              <p><span class="text-notion-text-secondary">Asunto:</span> <span class="font-medium text-notion-text">{{ configForm.value.subject }}</span></p>
+              <p><span class="text-notion-text-secondary">Remitente:</span> <span class="font-medium text-notion-text">{{ configForm.value.fromDisplayName }}&#64;mailboom.email</span></p>
+              <p><span class="text-notion-text-secondary">Modo:</span> <span class="font-medium text-notion-text">{{ campaignDesign()?.mode === 'custom-html' ? 'HTML personalizado' : 'Diseñador visual' }}</span></p>
               @if (selectedAudience()) {
                 <p class="flex items-center gap-2">
-                  <span class="text-gray-600">Audiencia:</span> 
-                  <span class="font-medium flex items-center gap-1">
-                    <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <span class="text-notion-text-secondary">Audiencia:</span> 
+                  <span class="font-medium flex items-center gap-1 text-notion-text">
+                    <svg class="w-4 h-4 text-notion-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
                     {{ selectedAudience()?.name }} 
                     @if (selectedAudience()?.totalContacts && selectedAudience()?.totalContacts! > 0) {
                       ({{ selectedAudience()?.totalContacts }} contactos)
                     } @else {
-                      <span class="text-yellow-600 text-sm">(contactos: verificar)</span>
+                      <span class="text-notion-orange text-sm">(contactos: verificar)</span>
                     }
                   </span>
                 </p>
               }
             </div>
 
-            <div class="border border-gray-200 rounded-lg overflow-hidden">
+            <div class="border border-notion-border rounded-notion overflow-hidden">
               <iframe [srcdoc]="getPreviewHtml()" class="w-full h-64 border-0"></iframe>
             </div>
 
             <!-- Acciones -->
             <div class="flex flex-col sm:flex-row justify-between gap-3 pt-4">
               <button type="button" (click)="prevStep()" 
-                      class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+                      class="px-5 py-2 border border-notion-border text-notion-text rounded-notion hover:bg-notion-bg-hover text-sm font-medium">
                 ← Atrás
               </button>
               <div class="flex gap-3">
                 <button type="button" (click)="saveDraft()" [disabled]="isSubmitting()"
-                        class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:bg-gray-300">
+                        class="px-5 py-2 border border-notion-border text-notion-text rounded-notion hover:bg-notion-bg-hover disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium">
                   💾 Guardar Borrador
                 </button>
                 <button type="button" (click)="goToSend()" [disabled]="isSubmitting()"
-                        class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300">
+                        class="px-5 py-2 bg-notion-text text-white rounded-notion hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium">
                   🚀 Enviar Campaña →
                 </button>
               </div>
@@ -184,7 +175,22 @@ const fromDisplayNameValidators = [
         }
 
       </div>
-    </div>
+
+    <!-- Confirm Dialog -->
+    <app-confirm-dialog
+      [dialogData]="confirmDialogData"
+      [isOpen]="isConfirmDialogOpen()"
+      (confirm)="onConfirmSend()"
+      (cancel)="onCancelSend()"
+      (dialogClose)="closeConfirmDialog()"
+    />
+
+    <!-- Success Dialog -->
+    <app-confirm-dialog
+      [dialogData]="successDialogData"
+      [isOpen]="isSuccessDialogOpen()"
+      (dialogClose)="onSuccessDialogClose()"
+    />
   `
 })
 export class CampaignWizardComponent implements OnInit {
@@ -203,6 +209,25 @@ export class CampaignWizardComponent implements OnInit {
   isSubmitting = signal(false);
   isEditing = signal(false);
   editingCampaignId = signal<string | null>(null);
+  
+  // Confirm dialog
+  isConfirmDialogOpen = signal(false);
+  confirmDialogData: ConfirmDialogData = {
+    title: 'Confirmar envío',
+    message: '¿Estás seguro de continuar?',
+    type: 'warning'
+  };
+  
+  // Success dialog
+  isSuccessDialogOpen = signal(false);
+  successDialogData: ConfirmDialogData = {
+    title: 'Éxito',
+    message: 'La operación se completó correctamente',
+    type: 'info'
+  };
+  
+  private pendingAudience: ContactList | null = null;
+  private pendingDesign: EmailDesign | null = null;
 
   configForm: FormGroup = this.fb.group({
     subject: ['', subjectValidators],
@@ -616,21 +641,54 @@ export class CampaignWizardComponent implements OnInit {
       return;
     }
     
-    // Cargar contactos de la lista y obtener el conteo
-    this.isSubmitting.set(true);
-    this.contactService.getContactsFromList(audience.id);
+    // Usar el totalContacts del objeto audience que viene del backend
+    const contactCount = audience.totalContacts || 0;
     
-    // Pequeña espera para que se carguen los contactos
-    setTimeout(() => {
-      const contactCount = this.contactService.getContactCount(audience.id);
-      this.isSubmitting.set(false);
-      
-      // Confirmar envío
-      if (confirm(`¿Estás seguro de enviar la campaña "${this.configForm.value.subject}" a ${contactCount} contactos?`)) {
-        // Proceder con el envío
-        this.executeSendCampaign(design, audience);
-      }
-    }, 300);
+    // Guardar datos pendientes para el diálogo
+    this.pendingAudience = audience;
+    this.pendingDesign = design;
+    
+    // Mostrar diálogo de confirmación estilizado
+    this.confirmDialogData = {
+      title: 'Enviar Campaña',
+      message: `¿Estás seguro de enviar la campaña "${this.configForm.value.subject}" a ${contactCount} contactos?`,
+      confirmText: 'Enviar',
+      cancelText: 'Cancelar',
+      type: 'warning'
+    };
+    this.isConfirmDialogOpen.set(true);
+  }
+  
+  onConfirmSend() {
+    if (this.pendingAudience && this.pendingDesign) {
+      this.executeSendCampaign(this.pendingDesign, this.pendingAudience);
+    }
+    this.closeConfirmDialog();
+  }
+  
+  onCancelSend() {
+    this.closeConfirmDialog();
+  }
+  
+  closeConfirmDialog() {
+    this.isConfirmDialogOpen.set(false);
+    this.pendingAudience = null;
+    this.pendingDesign = null;
+  }
+  
+  showSuccessDialog(message: string) {
+    this.successDialogData = {
+      title: 'Éxito',
+      message: message,
+      type: 'info',
+      confirmText: 'Aceptar'
+    };
+    this.isSuccessDialogOpen.set(true);
+  }
+  
+  onSuccessDialogClose() {
+    this.isSuccessDialogOpen.set(false);
+    this.router.navigate(['/campaigns']);
   }
 
   executeSendCampaign(design: EmailDesign, audience: ContactList) {
@@ -659,8 +717,7 @@ export class CampaignWizardComponent implements OnInit {
           this.campaignService.sendCampaign(campaign.id, ownerId).subscribe({
             next: () => {
               this.isSubmitting.set(false);
-              alert('✅ Campaña enviada exitosamente');
-              this.router.navigate(['/campaigns']);
+              this.showSuccessDialog('✅ Campaña enviada exitosamente');
             },
             error: (err) => {
               this.isSubmitting.set(false);
@@ -682,8 +739,7 @@ export class CampaignWizardComponent implements OnInit {
           this.campaignService.sendCampaign(campaign.id, ownerId).subscribe({
             next: () => {
               this.isSubmitting.set(false);
-              alert('✅ Campaña enviada exitosamente');
-              this.router.navigate(['/campaigns']);
+              this.showSuccessDialog('✅ Campaña enviada exitosamente');
             },
             error: (err) => {
               this.isSubmitting.set(false);

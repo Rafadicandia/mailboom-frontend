@@ -8,9 +8,9 @@ import { AuthService } from '../../core/services/auth.service';
   standalone: true,
   imports: [CommonModule, RouterModule, RouterOutlet],
   template: `
-    <div class="min-h-screen bg-notion-bg flex">
+    <div class="h-screen bg-notion-bg flex overflow-hidden">
       <!-- Sidebar -->
-      <aside class="w-60 bg-notion-bg-secondary flex flex-col flex-shrink-0 border-r border-notion-border">
+      <aside class="w-60 bg-notion-bg-secondary flex flex-col flex-shrink-0 border-r border-notion-border h-full overflow-y-auto">
         <!-- Logo -->
         <div class="p-4 border-b border-notion-border">
           <h1 class="text-lg font-semibold text-notion-text flex items-center gap-2">
@@ -91,9 +91,9 @@ import { AuthService } from '../../core/services/auth.service';
       </aside>
 
       <!-- Main Content -->
-      <div class="flex-1 flex flex-col min-w-0">
+      <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         <!-- Header -->
-        <header class="bg-white border-b border-notion-border px-6 py-4">
+        <header class="bg-white border-b border-notion-border px-6 py-4 flex-shrink-0">
           <h2 class="text-xl font-semibold text-notion-text">{{ isAdmin() ? 'Panel de Administración' : 'Panel de Control' }}</h2>
         </header>
 

@@ -41,22 +41,63 @@ import { QuillEditorComponent } from '../../../../shared/components/quill-editor
 
       <!-- MODO: HTML PROPIO -->
       @if (mode() === 'custom-html') {
-        <div class="space-y-4">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-gray-900">Tu código HTML</h3>
+        <!-- Layout de dos columnas: Editor HTML + Previsualizador -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          <!-- Columna izquierda: Editor HTML -->
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-semibold text-gray-900">Tu código HTML</h3>
+            </div>
+            
+            <textarea [ngModel]="customHtml()" (ngModelChange)="onCustomHtmlChange($event)" rows="20" class="w-full p-4 font-mono text-sm bg-gray-900 text-green-400 rounded-lg resize-none" placeholder="<!-- Pega tu HTML aquí -->"></textarea>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+              💡 Tip: Usa variables como {{ '{{name}}' }}, {{ '{{email}}' }} para personalizar
+            </div>
           </div>
           
-          <textarea [ngModel]="customHtml()" (ngModelChange)="onCustomHtmlChange($event)" rows="15" class="w-full p-4 font-mono text-sm bg-gray-900 text-green-400 rounded-lg resize-none" placeholder="<!-- Pega tu HTML aquí -->"></textarea>
-          
-          <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
-            💡 Tip: Usa variables como {{ '{{name}}' }}, {{ '{{email}}' }} para personalizar
+          <!-- Columna derecha: Previsualizador -->
+          <div class="rounded-lg overflow-hidden bg-white border border-gray-200 shadow-sm">
+            <div class="bg-gray-800 px-4 py-2 text-sm font-medium text-white flex items-center justify-between">
+              <span class="flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                Vista previa
+              </span>
+              <!-- Toggle Desktop/Mobile -->
+              <div class="flex items-center gap-1 bg-gray-700 rounded p-0.5">
+                <button type="button" 
+                        (click)="htmlPreviewMode.set('desktop')"
+                        [class.bg-white]="htmlPreviewMode() === 'desktop'"
+                        [class.text-gray-900]="htmlPreviewMode() === 'desktop'"
+                        class="px-2 py-1 text-xs font-medium rounded transition-all text-white"
+                        title="Desktop (600px)">
+                  🖥️
+                </button>
+                <button type="button" 
+                        (click)="htmlPreviewMode.set('mobile')"
+                        [class.bg-white]="htmlPreviewMode() === 'mobile'"
+                        [class.text-gray-900]="htmlPreviewMode() === 'mobile'"
+                        class="px-2 py-1 text-xs font-medium rounded transition-all text-white"
+                        title="Mobile (320px)">
+                  📱
+                </button>
+              </div>
+            </div>
+            <div class="bg-gray-100 p-2">
+              <iframe [srcdoc]="getCustomHtmlPreview()" 
+                      [class]="htmlPreviewMode() === 'desktop' ? 'w-full' : 'w-[320px]'"
+                      class="h-[600px] border-0 rounded shadow-sm bg-white transition-all mx-auto block"
+                      style="max-width: 100%;"></iframe>
+            </div>
           </div>
+          
         </div>
       }
 
       <!-- MODO: DISEÑADOR VISUAL -->
       @if (mode() === 'template') {
-        <div class="space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
           <!-- Mensaje cuando hay contenido HTML guardado pero no hay bloques -->
           @if (cachedHtml() && cachedHtml().trim().length > 0 && design.content.length === 0) {
@@ -376,21 +417,19 @@ import { QuillEditorComponent } from '../../../../shared/components/quill-editor
         </div>
       }
 
-      <!-- VISTA PREVIA FINAL -->
-      <div class="border-2 border-indigo-300 rounded-lg overflow-hidden bg-white shadow-lg">
-        <div class="bg-indigo-600 px-4 py-3 text-sm font-medium text-white flex items-center justify-between">
-          <span class="flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-            Vista previa del email
-          </span>
-          <div class="flex items-center gap-2">
+        <!-- Columna derecha: Previsualizador -->
+        <div class="rounded-lg overflow-hidden bg-white border border-gray-200 shadow-sm h-fit sticky top-4">
+          <div class="bg-gray-800 px-4 py-2 text-sm font-medium text-white flex items-center justify-between">
+            <span class="flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              Vista previa
+            </span>
             <span class="text-xs opacity-75">📱 Desktop</span>
           </div>
+          <div class="bg-gray-100 p-2">
+            <iframe [srcdoc]="getFinalHtml()" class="w-full h-[600px] border-0 rounded shadow-sm bg-white"></iframe>
+          </div>
         </div>
-        <div class="bg-gray-100 p-4">
-          <iframe [srcdoc]="getFinalHtml()" class="w-full h-96 border-0 rounded shadow-sm bg-white" style="min-height: 400px;"></iframe>
-        </div>
-      </div>
 
       <!-- BOTONES -->
       <div class="flex justify-between pt-4">
@@ -453,6 +492,7 @@ export class DesignStepComponent implements OnInit, OnChanges {
   @Input() initialDesign?: EmailDesign | null;
   
   mode = signal<EditorMode>('template');
+  htmlPreviewMode = signal<'desktop' | 'mobile'>('desktop');
   showHeaderConfig = signal(true);
   showFooterConfig = signal(true);
   
@@ -942,8 +982,27 @@ export class DesignStepComponent implements OnInit, OnChanges {
   }
 
   getCustomHtmlPreview(): string {
-    // Retornar el HTML tal cual, sin modificaciones de ningún tipo
-    return this.customHtml();
+    const userHtml = this.customHtml();
+    
+    if (!userHtml || userHtml.trim().length === 0) {
+      return '<!DOCTYPE html><html><head></head><body style="font-family: Arial, sans-serif; padding: 20px; color: #666;"><p style="text-align: center;">Escribe tu HTML en el editor</p></body></html>';
+    }
+    
+    const cssReset = '<style>body{margin:0!important;padding:0!important}table{border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt}td,th{border-collapse:collapse;padding:0}img{border:0;height:auto;line-height:100%;-ms-interpolation-mode:bicubic;max-width:100%}</style>';
+    
+    const hasHtml = userHtml.toLowerCase().includes('<html');
+    const hasHead = userHtml.toLowerCase().includes('<head>');
+    const hasBody = userHtml.toLowerCase().includes('<body');
+    
+    if (hasHtml && hasHead) {
+      return userHtml.replace(/<head[^>]*>/i, '$&' + cssReset);
+    }
+    
+    if (hasBody) {
+      return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">' + cssReset + '</head>' + userHtml + '</html>';
+    }
+    
+    return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">' + cssReset + '</head><body>' + userHtml + '</body></html>';
   }
 
   /**
