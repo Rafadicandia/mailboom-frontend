@@ -11,108 +11,232 @@ import { User } from '../../core/models/auth.model';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <div class="max-w-3xl mx-auto space-y-4">
-      <h2 class="text-2xl font-semibold text-notion-text">Perfil</h2>
+    <div class="max-w-5xl mx-auto py-8 px-6">
+      <!-- Header estilo Notion limpio -->
+      <div class="mb-10">
+        <div class="flex items-center gap-3 mb-1">
+          <h1 class="text-3xl font-semibold" style="color: #37352F;">Perfil</h1>
+        </div>
+        <p class="text-base" style="color: #787774;">Gestiona tu información personal y preferencias</p>
+      </div>
 
       @if (message()) {
-        <div [class]="isError() ? 'bg-notion-red bg-opacity-10 text-notion-red' : 'bg-notion-green bg-opacity-10 text-notion-green'" 
-             class="p-3 rounded-notion text-sm">
-          {{ message() }}
+        <div class="mb-6 p-4 rounded-lg" 
+             [style.background-color]="isError() ? 'rgba(224, 62, 62, 0.1)' : 'rgba(15, 123, 108, 0.1)'">
+          <p class="text-sm" [style.color]="isError() ? '#E03E3E' : '#0F7B6C'">{{ message() }}</p>
         </div>
       }
 
-      <!-- Perfil -->
-      <div class="bg-white rounded-notion shadow-notion border border-notion-border p-5">
+      <!-- Stats Grid estilo Notion sin bordes -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
+        <div class="group cursor-default">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background-color: #F7F6F3;">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #787774;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+              </svg>
+            </div>
+            <span class="text-sm" style="color: #787774;">Rol</span>
+          </div>
+          <p class="text-2xl font-semibold" style="color: #37352F;">{{ currentUser()?.role || 'USER' }}</p>
+        </div>
+
+        <div class="group cursor-default">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background-color: #F7F6F3;">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #787774;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <span class="text-sm" style="color: #787774;">Plan</span>
+          </div>
+          <p class="text-2xl font-semibold" style="color: #9065B0;">{{ currentUser()?.plan || 'FREE' }}</p>
+        </div>
+
+        <div class="group cursor-default">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background-color: #F7F6F3;">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #787774;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <span class="text-sm" style="color: #787774;">Emails</span>
+          </div>
+          <p class="text-2xl font-semibold" style="color: #0F7B6C;">{{ currentUser()?.emailsSent || 0 }}</p>
+        </div>
+
+        <div class="group cursor-default">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background-color: #F7F6F3;">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #787774;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <span class="text-sm" style="color: #787774;">Desde</span>
+          </div>
+          <p class="text-2xl font-semibold" style="color: #37352F;">{{ getMemberSince() }}</p>
+        </div>
+      </div>
+
+      <!-- Información Personal -->
+      <div class="mb-6">
+        <h2 class="text-lg font-medium mb-4" style="color: #37352F;">Información Personal</h2>
+        
         @if (isLoading()) {
-          <div class="flex justify-center py-4">
-            <svg class="w-5 h-5 animate-spin text-notion-text-secondary" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
+          <div class="flex justify-center py-8">
+            <div class="animate-spin rounded-full h-5 w-5" style="border: 2px solid #E9E9E7; border-top-color: #37352F;"></div>
           </div>
         } @else if (isEditing()) {
-          <form [formGroup]="personalForm" class="space-y-4">
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-xs text-notion-text-secondary mb-1">Nombre</label>
-                <input type="text" formControlName="name" class="w-full px-3 py-2 border border-notion-border rounded-notion text-sm">
+          <div class="p-4 rounded-lg" style="background-color: #F7F6F3;">
+            <form [formGroup]="personalForm" class="space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium mb-1" style="color: #37352F;">Nombre</label>
+                  <input type="text" formControlName="name" 
+                         class="w-full px-4 py-2 text-sm rounded-lg focus:outline-none"
+                         style="border: 1px solid #E9E9E7; color: #37352F; background-color: white;">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1" style="color: #37352F;">Email</label>
+                  <input type="email" formControlName="email" 
+                         class="w-full px-4 py-2 text-sm rounded-lg focus:outline-none"
+                         style="border: 1px solid #E9E9E7; color: #37352F; background-color: white;">
+                </div>
               </div>
               <div>
-                <label class="block text-xs text-notion-text-secondary mb-1">Email</label>
-                <input type="email" formControlName="email" class="w-full px-3 py-2 border border-notion-border rounded-notion text-sm">
+                <label class="block text-sm font-medium mb-1" style="color: #37352F;">Nueva Contraseña</label>
+                <input type="password" formControlName="password" placeholder="Dejar vacío para mantener la actual" 
+                       class="w-full px-4 py-2 text-sm rounded-lg focus:outline-none"
+                       style="border: 1px solid #E9E9E7; color: #37352F; background-color: white;">
               </div>
-            </div>
-            <div>
-              <label class="block text-xs text-notion-text-secondary mb-1">Contraseña</label>
-              <input type="password" formControlName="password" placeholder="Nueva contraseña" class="w-full px-3 py-2 border border-notion-border rounded-notion text-sm">
-            </div>
-            <div class="flex justify-end gap-2">
-              <button type="button" (click)="cancelEdit()" class="px-3 py-1.5 border border-notion-border rounded-notion text-sm hover:bg-notion-bg-hover">Cancelar</button>
-              <button type="button" (click)="savePersonalData()" [disabled]="!personalForm.valid || isSaving()" class="px-3 py-1.5 bg-notion-text text-white rounded-notion text-sm hover:bg-opacity-90">{{ isSaving() ? 'Guardando...' : 'Guardar' }}</button>
-            </div>
-          </form>
+              <div class="flex justify-end gap-2 pt-2">
+                <button type="button" (click)="cancelEdit()" 
+                        class="px-4 py-2 rounded text-sm transition-colors hover:bg-[#EBEBEA]"
+                        style="color: #37352F;">
+                  Cancelar
+                </button>
+                <button type="button" (click)="savePersonalData()" [disabled]="!personalForm.valid || isSaving()" 
+                        class="px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        style="background-color: #37352F; color: white;">
+                  @if (isSaving()) {
+                    <span class="inline-flex items-center">
+                      <svg class="w-4 h-4 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Guardando...
+                    </span>
+                  } @else {
+                    Guardar
+                  }
+                </button>
+              </div>
+            </form>
+          </div>
         } @else {
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-notion-purple bg-opacity-10 rounded-full flex items-center justify-center">
-                <span class="text-base font-semibold text-notion-purple">{{ getInitials() }}</span>
+          <div class="space-y-1">
+            <div class="flex items-center justify-between py-3 px-2 rounded-lg transition-colors hover:bg-[#F7F6F3]">
+              <div class="flex items-center gap-3 flex-1 min-w-0">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium text-white" style="background-color: #9065B0;">
+                  {{ getInitials() }}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium truncate" style="color: #37352F;">{{ currentUser()?.name }}</p>
+                  <p class="text-xs truncate" style="color: #9B9A97;">{{ currentUser()?.email }}</p>
+                </div>
               </div>
-              <div>
-                <h4 class="font-medium text-notion-text">{{ currentUser()?.name }}</h4>
-                <p class="text-sm text-notion-text-secondary">{{ currentUser()?.email }}</p>
-              </div>
+              <button (click)="startEdit()" class="text-xs hover:underline" style="color: #529CCA;">
+                Editar
+              </button>
             </div>
-            <button (click)="startEdit()" class="px-3 py-1.5 border border-notion-border rounded-notion text-sm hover:bg-notion-bg-hover">Editar</button>
           </div>
         }
       </div>
 
-      <!-- Información de la cuenta -->
-      <div class="bg-white rounded-notion shadow-notion border border-notion-border p-5">
-        <div class="grid grid-cols-4 gap-4 py-2">
-          <div>
-            <p class="text-xs text-notion-text-secondary">Email</p>
-            <p class="text-sm text-notion-text">{{ currentUser()?.email }}</p>
-          </div>
-          <div>
-            <p class="text-xs text-notion-text-secondary">Rol</p>
-            <p class="text-sm text-notion-text">{{ currentUser()?.role || 'USER' }}</p>
-          </div>
-          <div>
-            <p class="text-xs text-notion-text-secondary">Plan</p>
-            <p class="text-sm text-notion-text">{{ currentUser()?.plan || 'FREE' }}</p>
-          </div>
-          <div>
-            <p class="text-xs text-notion-text-secondary">Emails enviados</p>
-            <p class="text-sm text-notion-text">{{ currentUser()?.emailsSent || 0 }}</p>
-          </div>
-        </div>
-      </div>
-
       <!-- Preferencias -->
-      <div class="bg-white rounded-notion shadow-notion border border-notion-border p-5">
-        <div class="flex items-center justify-between py-2">
-          <p class="text-sm text-notion-text">Notificaciones</p>
-          <button class="relative inline-flex h-5 w-9 rounded-full transition-colors" [class.bg-notion-text]="emailNotifications()" [class.bg-notion-border]="!emailNotifications()" (click)="toggleEmailNotifications()">
-            <span class="inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform" [class.translate-x-4]="emailNotifications()" [class.translate-x-0.5]="!emailNotifications()"></span>
-          </button>
-        </div>
-        <div class="flex items-center justify-between py-2 border-t border-notion-border">
-          <p class="text-sm text-notion-text">Newsletter</p>
-          <button class="relative inline-flex h-5 w-9 rounded-full transition-colors" [class.bg-notion-text]="newsletter()" [class.bg-notion-border]="!newsletter()" (click)="toggleNewsletter()">
-            <span class="inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform" [class.translate-x-4]="newsletter()" [class.translate-x-0.5]="!newsletter()"></span>
-          </button>
+      <div class="mb-6">
+        <h2 class="text-lg font-medium mb-4" style="color: #37352F;">Preferencias</h2>
+        
+        <div class="space-y-1">
+          <div class="flex items-center justify-between py-3 px-2 rounded-lg transition-colors hover:bg-[#F7F6F3]">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: #F7F6F3;">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #787774;">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-medium" style="color: #37352F;">Notificaciones por email</p>
+                <p class="text-xs" style="color: #9B9A97;">Recibe actualizaciones sobre tus campañas</p>
+              </div>
+            </div>
+            <button class="relative inline-flex h-5 w-9 rounded-full transition-colors" 
+                    [style.background-color]="emailNotifications() ? '#37352F' : '#E9E9E7'" 
+                    (click)="toggleEmailNotifications()">
+              <span class="inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm" 
+                    [class.translate-x-4]="emailNotifications()" 
+                    [class.translate-x-0.5]="!emailNotifications()"
+                    style="margin-top: 3px;"></span>
+            </button>
+          </div>
+
+          <div class="flex items-center justify-between py-3 px-2 rounded-lg transition-colors hover:bg-[#F7F6F3]">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: #F7F6F3;">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #787774;">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-medium" style="color: #37352F;">Newsletter</p>
+                <p class="text-xs" style="color: #9B9A97;">Consejos y novedades de email marketing</p>
+              </div>
+            </div>
+            <button class="relative inline-flex h-5 w-9 rounded-full transition-colors" 
+                    [style.background-color]="newsletter() ? '#37352F' : '#E9E9E7'" 
+                    (click)="toggleNewsletter()">
+              <span class="inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm" 
+                    [class.translate-x-4]="newsletter()" 
+                    [class.translate-x-0.5]="!newsletter()"
+                    style="margin-top: 3px;"></span>
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- Administrar Cuenta -->
-      <div class="bg-white rounded-notion shadow-notion border border-notion-border p-5">
-        <div class="flex items-center justify-between py-2">
-          <div>
-            <p class="text-sm text-notion-text">Eliminar cuenta</p>
-            <p class="text-xs text-notion-text-secondary">Acción irreversible</p>
+      <!-- Zona de Peligro -->
+      <div class="mb-6">
+        <h2 class="text-lg font-medium mb-4" style="color: #37352F;">Administrar Cuenta</h2>
+        
+        <div class="p-4 rounded-lg" style="background-color: rgba(224, 62, 62, 0.05); border: 1px solid rgba(224, 62, 62, 0.2);">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgba(224, 62, 62, 0.1);">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #E03E3E;">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-medium" style="color: #37352F;">Eliminar cuenta</p>
+                <p class="text-xs" style="color: #787774;">Esta acción es irreversible y eliminará todos tus datos</p>
+              </div>
+            </div>
+            <button (click)="confirmDeleteAccount()" [disabled]="isDeleting()" 
+                    class="px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    style="background-color: #E03E3E; color: white;">
+              @if (isDeleting()) {
+                <span class="inline-flex items-center">
+                  <svg class="w-4 h-4 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Eliminando...
+                </span>
+              } @else {
+                Eliminar cuenta
+              }
+            </button>
           </div>
-          <button (click)="confirmDeleteAccount()" [disabled]="isDeleting()" class="px-3 py-1.5 border border-notion-border rounded-notion text-sm hover:bg-notion-bg-hover">{{ isDeleting() ? 'Eliminando...' : 'Eliminar' }}</button>
         </div>
       </div>
     </div>
@@ -173,6 +297,11 @@ export class ProfileComponent implements OnInit {
   getInitials(): string {
     const name = this.currentUser()?.name || '';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  }
+
+  getMemberSince(): string {
+    // This could be enhanced to show actual member since date
+    return '2024';
   }
 
   startEdit() {

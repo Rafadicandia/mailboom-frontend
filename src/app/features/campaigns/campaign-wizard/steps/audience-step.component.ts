@@ -18,24 +18,30 @@ import { ContactList, Contact } from '../../../../core/models/contact.model';
 
       <!-- Lista de audiencias existentes -->
       @if (contactService.contactLists().length > 0) {
-        <div class="space-y-3">
-          <label class="block text-sm font-medium text-notion-text">Tus listas de contactos</label>
+        <div class="space-y-1">
+          <label class="block text-sm font-medium text-notion-text mb-3">Tus listas de contactos</label>
           @for (list of contactService.contactLists(); track list.id) {
-            <label class="flex items-center p-4 border border-notion-border rounded-notion cursor-pointer hover:bg-notion-bg-hover hover:border-notion-text transition-colors"
-                   [class.bg-notion-bg-hover]="selectedListId() === list.id"
-                   [class.border-notion-text]="selectedListId() === list.id">
-              <input type="radio" 
-                     name="audience" 
-                     [value]="list.id" 
-                     [(ngModel)]="selectedListIdVal"
-                     (ngModelChange)="onSelectList($event)"
-                     class="w-4 h-4 text-notion-text">
-              <div class="ml-3 flex-1">
-                <p class="font-medium text-notion-text">{{ list.name }}</p>
-                <p class="text-sm text-notion-text-secondary">{{ getContactCount(list) }} contactos</p>
+            <label class="flex items-center justify-between py-3 px-2 rounded-notion cursor-pointer transition-colors hover:bg-notion-bg-hover"
+                   [class.bg-notion-bg-hover]="selectedListId() === list.id">
+              <div class="flex items-center gap-3 flex-1 min-w-0">
+                <input type="radio" 
+                       name="audience" 
+                       [value]="list.id" 
+                       [(ngModel)]="selectedListIdVal"
+                       (ngModelChange)="onSelectList($event)"
+                       class="w-4 h-4 text-notion-text">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgba(144, 101, 176, 0.15);">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #9065B0;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium truncate text-notion-text">{{ list.name }}</p>
+                  <p class="text-xs text-notion-text-tertiary">{{ getContactCount(list) }} contactos</p>
+                </div>
               </div>
               @if (getContactCount(list) === 0) {
-                <span class="text-xs text-notion-orange bg-notion-yellow bg-opacity-15 px-2 py-1 rounded">Vacía</span>
+                <span class="text-xs text-notion-orange px-2 py-1 rounded" style="background-color: rgba(203, 137, 7, 0.15);">Vacía</span>
               }
             </label>
           }
@@ -133,51 +139,41 @@ import { ContactList, Contact } from '../../../../core/models/contact.model';
         <!-- Ver integrantes de la lista seleccionada -->
         <div class="border-t border-notion-border pt-6">
           <button (click)="toggleShowContacts()" 
-                  class="flex items-center gap-2 text-notion-blue hover:text-notion-blue hover:underline font-medium text-sm">
+                  class="text-xs hover:underline text-notion-blue font-medium">
             @if (!showContacts()) {
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-              </svg>
-              Ver integrantes de la lista
+              Ver contactos
             } @else {
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-              Ocultar integrantes
+              Ocultar contactos
             }
           </button>
 
           @if (showContacts()) {
-            <div class="mt-4 p-4 bg-notion-bg-secondary rounded-notion border border-notion-border">
+            <div class="mt-4 p-4 rounded-lg" style="background-color: #F7F6F3;">
               @if (isLoadingContacts()) {
-                <div class="text-center py-4">
-                  <svg class="w-6 h-6 animate-spin mx-auto text-notion-text-secondary" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <p class="mt-2 text-sm text-notion-text-secondary">Cargando contactos...</p>
+                <div class="flex justify-center py-8">
+                  <div class="animate-spin rounded-full h-5 w-5" style="border: 2px solid #E9E9E7; border-top-color: #37352F;"></div>
                 </div>
               } @else if (selectedListContacts().length === 0) {
-                <p class="text-notion-text-tertiary text-center py-4">No hay contactos en esta lista</p>
+                <p class="text-notion-text-tertiary text-center py-4 text-sm">No hay contactos en esta lista</p>
               } @else {
-                <div class="space-y-2 max-h-64 overflow-y-auto">
+                <div class="space-y-1 max-h-64 overflow-y-auto">
                   @for (contact of selectedListContacts(); track contact.id || contact.contactId) {
-                    <div class="flex items-center justify-between p-2 bg-white rounded-notion border border-notion-border">
-                      <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-notion-text truncate">
-                          {{ contact.name || 'Sin nombre' }}
-                        </p>
-                        <p class="text-xs text-notion-text-tertiary truncate">{{ contact.email }}</p>
+                    <div class="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-white transition-colors">
+                      <div class="flex items-center gap-3 flex-1 min-w-0">
+                        <div class="w-7 h-7 rounded-full flex items-center justify-center" style="background-color: rgba(144, 101, 176, 0.15);">
+                          <span class="text-xs font-medium" style="color: #9065B0;">{{ (contact.name || contact.email || '?')[0].toUpperCase() }}</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                          <p class="text-sm font-medium truncate text-notion-text">
+                            {{ contact.name || 'Sin nombre' }}
+                          </p>
+                          <p class="text-xs text-notion-text-tertiary truncate">{{ contact.email }}</p>
+                        </div>
                       </div>
                       @if (contact.subscribed !== undefined) {
-                        <span class="ml-2 text-xs px-2 py-1 rounded" 
-                              [class.bg-notion-green]="contact.subscribed"
-                              [class.bg-opacity-15]="contact.subscribed"
-                              [class.text-notion-green]="contact.subscribed"
-                              [class.bg-notion-red]="!contact.subscribed"
-                              [class.bg-opacity-15]="!contact.subscribed"
-                              [class.text-notion-red]="!contact.subscribed">
+                        <span class="text-xs px-2 py-1 rounded" 
+                              [style.backgroundColor]="contact.subscribed ? 'rgba(77, 171, 154, 0.15)' : 'rgba(224, 62, 62, 0.15)'"
+                              [style.color]="contact.subscribed ? '#4DAB9A' : '#E03E3E'">
                           {{ contact.subscribed ? 'Activo' : 'Inactivo' }}
                         </span>
                       }
@@ -185,7 +181,7 @@ import { ContactList, Contact } from '../../../../core/models/contact.model';
                   }
                 </div>
                 @if (selectedListContacts().length > 0) {
-                  <p class="text-xs text-notion-text-tertiary mt-2 text-center">
+                  <p class="text-xs text-notion-text-tertiary mt-3 text-center">
                     Mostrando {{ selectedListContacts().length }} contacto(s)
                   </p>
                 }

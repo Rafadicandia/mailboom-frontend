@@ -20,326 +20,405 @@ interface ParsedContact {
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   template: `
-    <div class="space-y-6">
-      <div class="flex justify-between items-center">
-        <div>
-          <h2 class="text-xl font-semibold text-notion-text">Audiencias</h2>
-          <p class="text-sm text-notion-text-secondary">Gestiona tus listas de contactos</p>
-        </div>
-        <div class="flex gap-2">
-          <button (click)="openImportModal()"
-                  class="px-4 py-2 bg-notion-green text-white rounded-notion hover:bg-opacity-90 flex items-center gap-2 text-sm font-medium">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-            </svg>
-            Importar CSV/Excel
-          </button>
-          <button (click)="openCreateListModal()"
-                  class="px-4 py-2 bg-notion-text text-white rounded-notion hover:bg-opacity-90 flex items-center gap-2 text-sm font-medium">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-            </svg>
-            Nueva Lista
-          </button>
+    <div class="max-w-5xl mx-auto py-8 px-6">
+      <!-- Header estilo Notion limpio -->
+      <div class="mb-10">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-3 mb-1">
+              <h1 class="text-3xl font-semibold" style="color: #37352F;">Audiencias</h1>
+            </div>
+            <p class="text-base" style="color: #787774;">Gestiona tus listas de contactos</p>
+          </div>
+          <div class="flex gap-3">
+            <button (click)="openImportModal()"
+                    class="inline-flex items-center px-4 py-2.5 rounded-lg transition-colors text-sm font-medium hover:bg-[#EBEBEA]"
+                    style="background-color: #F7F6F3; color: #37352F;">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+              </svg>
+              Importar CSV/Excel
+            </button>
+            <button (click)="openCreateListModal()"
+                    class="inline-flex items-center px-4 py-2.5 rounded-lg transition-colors text-sm font-medium"
+                    style="background-color: #37352F; color: white;">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              Nueva Lista
+            </button>
+          </div>
         </div>
       </div>
 
       @if (isLoading()) {
-        <div class="text-center py-12">
-          <svg class="w-6 h-6 animate-spin mx-auto text-notion-text-secondary" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <p class="mt-2 text-notion-text-secondary">Cargando audiencias...</p>
+        <div class="flex justify-center py-12">
+          <div class="animate-spin rounded-full h-5 w-5" style="border: 2px solid #E9E9E7; border-top-color: #37352F;"></div>
         </div>
       } @else if (contactLists().length === 0) {
-        <div class="bg-notion-yellow bg-opacity-10 border border-notion-yellow border-opacity-20 rounded-notion p-8 text-center">
-          <svg class="w-12 h-12 mx-auto text-notion-yellow mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-          </svg>
-          <h3 class="text-base font-semibold text-notion-text mb-2">No tienes audiencias aún</h3>
-          <p class="text-sm text-notion-text-secondary mb-4">Crea tu primera lista de contactos para comenzar a enviar campañas</p>
+        <!-- Empty State estilo Notion -->
+        <div class="py-12 text-center">
+          <div class="w-12 h-12 mx-auto mb-4 rounded-lg flex items-center justify-center" style="background-color: #F7F6F3;">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #787774;">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </div>
+          <h3 class="text-base font-medium mb-2" style="color: #37352F;">No tienes audiencias aún</h3>
+          <p class="text-sm mb-6" style="color: #787774;">Crea tu primera lista de contactos para comenzar a enviar campañas</p>
           <button (click)="openCreateListModal()"
-                  class="inline-flex items-center px-4 py-2 bg-notion-yellow text-white rounded-notion hover:bg-opacity-90 text-sm">
+                  class="inline-flex items-center px-4 py-2.5 rounded-lg transition-colors text-sm font-medium"
+                  style="background-color: #37352F; color: white;">
             Crear mi primera audiencia
           </button>
         </div>
       } @else {
-        <div class="space-y-4">
-          @for (list of contactLists(); track list.id) {
-            <div class="bg-white border border-notion-border rounded-notion overflow-hidden hover:shadow-notion-hover transition-all">
-              <div class="p-4 bg-notion-bg-secondary flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                  <div class="w-10 h-10 bg-notion-purple bg-opacity-10 rounded-notion flex items-center justify-center">
-                    <svg class="w-5 h-5 text-notion-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 class="font-semibold text-notion-text">{{ list.name }}</h3>
-                    <p class="text-sm text-notion-text-secondary">{{ getContactCount(list) }} contactos</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-2">
-                  <button (click)="toggleContacts(list)"
-                          class="px-3 py-1.5 text-primary-500 hover:bg-notion-bg-hover rounded-notion text-sm font-medium">
-                    {{ expandedListId() === list.id ? 'Ocultar' : 'Ver contactos' }}
-                  </button>
-                  <a routerLink="/campaigns/new" [queryParams]="{listId: list.id}"
-                     class="px-3 py-1.5 bg-notion-text text-white rounded-notion hover:bg-opacity-90 text-sm">
-                    Crear campaña
-                  </a>
-                  <button (click)="editList(list)"
-                          class="p-2 text-notion-text-tertiary hover:bg-notion-bg-hover rounded-notion"
-                          title="Editar lista">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                    </svg>
-                  </button>
-                  <button (click)="deleteList(list)"
-                          class="p-2 text-notion-text-tertiary hover:text-notion-red hover:bg-notion-red hover:bg-opacity-10 rounded-notion"
-                          title="Eliminar lista">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                    </svg>
-                  </button>
-                </div>
+        <!-- Stats Grid estilo Notion sin bordes -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
+          <div class="group cursor-default">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background-color: #F7F6F3;">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #787774;">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
               </div>
+              <span class="text-sm" style="color: #787774;">Listas</span>
+            </div>
+            <p class="text-2xl font-semibold" style="color: #37352F;">{{ contactLists().length }}</p>
+          </div>
 
-              @if (expandedListId() === list.id) {
-                <div class="border-t border-notion-border p-4">
-                  <div class="flex flex-col sm:flex-row gap-4 mb-4">
-                    <div class="relative flex-1">
-                      <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-notion-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          <div class="group cursor-default">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background-color: #F7F6F3;">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #787774;">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+              </div>
+              <span class="text-sm" style="color: #787774;">Contactos</span>
+            </div>
+            <p class="text-2xl font-semibold" style="color: #9065B0;">{{ getTotalContacts() }}</p>
+          </div>
+
+          <div class="group cursor-default">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background-color: #F7F6F3;">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #787774;">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <span class="text-sm" style="color: #787774;">Campañas</span>
+            </div>
+            <p class="text-2xl font-semibold" style="color: #0F7B6C;">{{ getCampaignsCount() }}</p>
+          </div>
+
+          <div class="group cursor-default">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background-color: #F7F6F3;">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #787774;">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <span class="text-sm" style="color: #787774;">Suscritos</span>
+            </div>
+            <p class="text-2xl font-semibold" style="color: #37352F;">{{ getSubscribedCount() }}</p>
+          </div>
+        </div>
+
+        <!-- Lista de audiencias estilo Notion -->
+        <div class="mb-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-medium" style="color: #37352F;">Todas las Audiencias</h2>
+            <button (click)="loadContactLists()" class="text-sm hover:underline" style="color: #787774;">
+              Actualizar
+            </button>
+          </div>
+          
+          <div class="space-y-1">
+            @for (list of contactLists(); track list.id) {
+              <div class="rounded-lg transition-colors">
+                <div class="flex items-center justify-between py-3 px-2 rounded-lg transition-colors hover:bg-[#F7F6F3]">
+                  <div class="flex items-center gap-3 flex-1 min-w-0">
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgba(144, 101, 176, 0.15);">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #9065B0;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
                       </svg>
-                      <input type="text" 
-                             [(ngModel)]="searchTerm"
-                             placeholder="Buscar contactos..."
-                             class="w-full pl-10 pr-4 py-2 border border-notion-border rounded-notion focus:border-primary-400 focus:ring-2 focus:ring-primary-100">
                     </div>
-                    <button (click)="openAddContactModal(list.id)"
-                            class="px-4 py-2 bg-notion-green text-white rounded-notion hover:bg-opacity-90 flex items-center gap-2 text-sm">
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                      </svg>
-                      Agregar Contacto
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium truncate" style="color: #37352F;">{{ list.name }}</p>
+                      <p class="text-xs" style="color: #9B9A97;">{{ getContactCount(list) }} contactos · Creada {{ list.createdAt | date:'dd/MM/yyyy' }}</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <button (click)="toggleContacts(list)"
+                            class="text-xs hover:underline"
+                            style="color: #529CCA;">
+                      {{ expandedListId() === list.id ? 'Ocultar' : 'Ver' }}
+                    </button>
+                    <a routerLink="/campaigns/new" [queryParams]="{listId: list.id}"
+                       class="text-xs px-3 py-1.5 rounded transition-colors hover:bg-[#EBEBEA]"
+                       style="background-color: #F7F6F3; color: #37352F;">
+                      Crear campaña
+                    </a>
+                    <button (click)="editList(list)"
+                            class="text-xs hover:underline"
+                            style="color: #787774;">
+                      Editar
+                    </button>
+                    <button (click)="deleteList(list)"
+                            class="text-xs hover:underline"
+                            style="color: #E03E3E;">
+                      Eliminar
                     </button>
                   </div>
-
-                  @if (isLoadingContacts()) {
-                    <div class="text-center py-8">
-                      <svg class="w-6 h-6 animate-spin mx-auto text-notion-text-secondary" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                    </div>
-                  } @else if (filteredContacts().length === 0) {
-                    <div class="text-center py-8 text-notion-text-secondary">
-                      @if (contacts().length === 0) {
-                        <p>No hay contactos en esta lista</p>
-                        <button (click)="openAddContactModal(list.id)" class="text-primary-500 hover:text-primary-600 mt-2">
-                          Agregar el primer contacto
-                        </button>
-                      } @else {
-                        <p>No se encontraron resultados para "{{ searchTerm }}"</p>
-                      }
-                    </div>
-                  } @else {
-                    <div class="overflow-x-auto">
-                      <table class="w-full">
-                        <thead class="bg-notion-bg-secondary">
-                          <tr>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-notion-text-secondary uppercase">Email</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-notion-text-secondary uppercase">Nombre</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-notion-text-secondary uppercase">Estado</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-notion-text-secondary uppercase">Acciones</th>
-                          </tr>
-                        </thead>
-                        <tbody class="divide-y divide-notion-border">
-                          @for (contact of filteredContacts(); track $index) {
-                            <tr class="hover:bg-notion-bg-hover">
-                              <td class="px-4 py-3 text-sm text-notion-text">{{ contact.email }}</td>
-                              <td class="px-4 py-3 text-sm text-notion-text">{{ contact.name || '-' }}</td>
-                              <td class="px-4 py-3 text-sm">
-                                @if (contact.subscribed) {
-                                  <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Suscrito</span>
-                                } @else {
-                                  <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">No suscrito</span>
-                                }
-                              </td>
-                              <td class="px-4 py-3 text-sm text-right">
-                                <div class="flex justify-end gap-2">
-                                  <button (click)="editContact(contact)"
-                                          class="p-2 text-notion-text-tertiary hover:bg-notion-bg-hover rounded"
-                                          title="Editar">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                    </svg>
-                                  </button>
-                                  <button (click)="deleteContact(contact)"
-                                          class="p-2 text-notion-text-tertiary hover:text-red-600 hover:bg-red-50 rounded"
-                                          title="Eliminar">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                    </svg>
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          }
-                        </tbody>
-                      </table>
-                    </div>
-                  }
                 </div>
-              }
+
+                <!-- Contactos expandidos -->
+                @if (expandedListId() === list.id) {
+                  <div class="ml-11 mt-2 mb-2 p-4 rounded-lg" style="background-color: #F7F6F3;">
+                    <div class="flex flex-col sm:flex-row gap-3 mb-4">
+                      <div class="relative flex-1">
+                        <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #9B9A97;">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <input type="text" 
+                               [(ngModel)]="searchTerm"
+                               placeholder="Buscar contactos..."
+                               class="w-full pl-9 pr-4 py-2 text-sm rounded-lg focus:outline-none"
+                               style="background-color: white; border: 1px solid #E9E9E7; color: #37352F;">
+                      </div>
+                      <button (click)="openAddContactModal(list.id)"
+                              class="inline-flex items-center px-3 py-2 rounded-lg transition-colors text-sm font-medium"
+                              style="background-color: #37352F; color: white;">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Agregar
+                      </button>
+                    </div>
+
+                    @if (isLoadingContacts()) {
+                      <div class="flex justify-center py-8">
+                        <div class="animate-spin rounded-full h-5 w-5" style="border: 2px solid #E9E9E7; border-top-color: #37352F;"></div>
+                      </div>
+                    } @else if (filteredContacts().length === 0) {
+                      <div class="text-center py-8" style="color: #787774;">
+                        @if (contacts().length === 0) {
+                          <p class="text-sm">No hay contactos en esta lista</p>
+                          <button (click)="openAddContactModal(list.id)" class="text-sm hover:underline mt-2" style="color: #529CCA;">
+                            Agregar el primer contacto
+                          </button>
+                        } @else {
+                          <p class="text-sm">No se encontraron resultados para "{{ searchTerm }}"</p>
+                        }
+                      </div>
+                    } @else {
+                      <div class="overflow-x-auto rounded-lg" style="background-color: white; border: 1px solid #E9E9E7;">
+                        <table class="w-full">
+                          <thead>
+                            <tr style="border-bottom: 1px solid #E9E9E7;">
+                              <th class="px-4 py-2 text-left text-xs font-medium" style="color: #787774;">Email</th>
+                              <th class="px-4 py-2 text-left text-xs font-medium" style="color: #787774;">Nombre</th>
+                              <th class="px-4 py-2 text-left text-xs font-medium" style="color: #787774;">Estado</th>
+                              <th class="px-4 py-2 text-right text-xs font-medium" style="color: #787774;">Acciones</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            @for (contact of filteredContacts(); track $index) {
+                              <tr class="transition-colors hover:bg-[#F7F6F3]" style="border-bottom: 1px solid #E9E9E7;">
+                                <td class="px-4 py-2.5 text-sm" style="color: #37352F;">{{ contact.email }}</td>
+                                <td class="px-4 py-2.5 text-sm" style="color: #787774;">{{ contact.name || '-' }}</td>
+                                <td class="px-4 py-2.5 text-sm">
+                                  @if (contact.subscribed) {
+                                    <span class="text-xs px-2 py-0.5 rounded" style="background-color: rgba(15, 123, 108, 0.15); color: #0F7B6C;">Suscrito</span>
+                                  } @else {
+                                    <span class="text-xs px-2 py-0.5 rounded" style="background-color: #F7F6F3; color: #787774;">No suscrito</span>
+                                  }
+                                </td>
+                                <td class="px-4 py-2.5 text-sm text-right">
+                                  <div class="flex justify-end gap-2">
+                                    <button (click)="editContact(contact)"
+                                            class="text-xs hover:underline"
+                                            style="color: #529CCA;">
+                                      Editar
+                                    </button>
+                                    <button (click)="deleteContact(contact)"
+                                            class="text-xs hover:underline"
+                                            style="color: #E03E3E;">
+                                      Eliminar
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            }
+                          </tbody>
+                        </table>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Paginación estilo Notion limpio -->
+          @if (contactService.totalPages() > 1) {
+            <div class="flex justify-center items-center gap-3 mt-6 text-sm">
+              <button 
+                (click)="changePage(contactService.currentPage() - 1)" 
+                [disabled]="contactService.currentPage() === 0"
+                class="px-2 py-1 rounded disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F7F6F3]"
+                style="color: #787774;">
+                ←
+              </button>
+              <span style="color: #9B9A97;">
+                {{ contactService.currentPage() + 1 }} / {{ contactService.totalPages() }}
+              </span>
+              <button 
+                (click)="changePage(contactService.currentPage() + 1)" 
+                [disabled]="contactService.currentPage() >= contactService.totalPages() - 1"
+                class="px-2 py-1 rounded disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F7F6F3]"
+                style="color: #787774;">
+                →
+              </button>
             </div>
           }
         </div>
-
-        <!-- Paginación -->
-        @if (contactLists().length > 0) {
-          <div class="flex justify-center items-center gap-2 mt-6">
-            <button 
-              (click)="changePage(contactService.currentPage() - 1)" 
-              [disabled]="contactService.currentPage() === 0"
-              class="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50">
-              Anterior
-            </button>
-            <span class="px-4 py-2 text-gray-600">
-              Página {{ contactService.currentPage() + 1 }} de {{ contactService.totalPages() }}
-            </span>
-            <button 
-              (click)="changePage(contactService.currentPage() + 1)" 
-              [disabled]="contactService.currentPage() >= contactService.totalPages() - 1"
-              class="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50">
-              Siguiente
-            </button>
-          </div>
-        }
       }
 
-      <!-- Modal Crear/Editar Lista -->
+      <!-- Modal Crear/Editar Lista estilo Notion -->
       @if (showListModal()) {
-        <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" (click)="closeListModal()">
-          <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden" (click)="$event.stopPropagation()">
-            <div class="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+        <div class="fixed inset-0 flex items-center justify-center z-50" style="background-color: rgba(0, 0, 0, 0.4);" (click)="closeListModal()">
+          <div class="w-full max-w-md overflow-hidden rounded-lg" style="background-color: white;" (click)="$event.stopPropagation()">
+            <div class="flex items-center justify-between p-4" style="border-bottom: 1px solid #E9E9E7;">
               <div>
-                <h3 class="text-lg font-semibold text-gray-900">{{ isEditingList() ? 'Editar Lista' : 'Nueva Lista' }}</h3>
-                <p class="text-sm text-gray-500">{{ isEditingList() ? 'Modifica los datos de tu lista' : 'Crea una nueva lista de contactos' }}</p>
+                <h3 class="text-base font-medium" style="color: #37352F;">{{ isEditingList() ? 'Editar Lista' : 'Nueva Lista' }}</h3>
+                <p class="text-xs" style="color: #787774;">{{ isEditingList() ? 'Modifica los datos de tu lista' : 'Crea una nueva lista de contactos' }}</p>
               </div>
-              <button (click)="closeListModal()" class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-lg transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <button (click)="closeListModal()" class="p-1.5 rounded transition-colors hover:bg-[#F7F6F3]">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #9B9A97;">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
               </button>
             </div>
             <div class="p-4 space-y-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre de la lista</label>
+                <label class="block text-sm font-medium mb-1" style="color: #37352F;">Nombre de la lista</label>
                 <input type="text" [(ngModel)]="listName"
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                       class="w-full px-4 py-2 text-sm rounded-lg focus:outline-none"
+                       style="border: 1px solid #E9E9E7; color: #37352F;"
                        placeholder="Ej: Newsletter Febrero 2025">
               </div>
               @if (listError()) {
-                <div class="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p class="text-red-600 text-sm">{{ listError() }}</p>
+                <div class="p-3 rounded-lg" style="background-color: rgba(224, 62, 62, 0.1);">
+                  <p class="text-sm" style="color: #E03E3E;">{{ listError() }}</p>
                 </div>
               }
             </div>
-            <div class="flex justify-end gap-3 p-4 border-t border-gray-200 bg-gray-50">
+            <div class="flex justify-end gap-2 p-4" style="border-top: 1px solid #E9E9E7;">
               <button (click)="closeListModal()"
-                      class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                      class="px-4 py-2 rounded text-sm transition-colors hover:bg-[#F7F6F3]"
+                      style="color: #37352F;">
                 Cancelar
               </button>
               <button (click)="saveList()"
                       [disabled]="!listName.trim() || isSavingList()"
-                      class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2 transition-colors">
+                      class="px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      style="background-color: #37352F; color: white;">
                 @if (isSavingList()) {
-                  <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+                  <span class="inline-flex items-center">
+                    <svg class="w-4 h-4 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Guardando...
+                  </span>
+                } @else {
+                  Guardar
                 }
-                {{ isSavingList() ? 'Guardando...' : 'Guardar' }}
               </button>
             </div>
           </div>
         </div>
       }
 
-      <!-- Modal Crear/Editar Contacto -->
+      <!-- Modal Crear/Editar Contacto estilo Notion -->
       @if (showContactModal()) {
-        <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" (click)="closeContactModal()">
-          <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden" (click)="$event.stopPropagation()">
-            <div class="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+        <div class="fixed inset-0 flex items-center justify-center z-50" style="background-color: rgba(0, 0, 0, 0.4);" (click)="closeContactModal()">
+          <div class="w-full max-w-md overflow-hidden rounded-lg" style="background-color: white;" (click)="$event.stopPropagation()">
+            <div class="flex items-center justify-between p-4" style="border-bottom: 1px solid #E9E9E7;">
               <div>
-                <h3 class="text-lg font-semibold text-gray-900">{{ isEditingContact() ? 'Editar Contacto' : 'Nuevo Contacto' }}</h3>
-                <p class="text-sm text-gray-500">{{ isEditingContact() ? 'Modifica los datos del contacto' : 'Agrega un nuevo contacto a tu lista' }}</p>
+                <h3 class="text-base font-medium" style="color: #37352F;">{{ isEditingContact() ? 'Editar Contacto' : 'Nuevo Contacto' }}</h3>
+                <p class="text-xs" style="color: #787774;">{{ isEditingContact() ? 'Modifica los datos del contacto' : 'Agrega un nuevo contacto a tu lista' }}</p>
               </div>
-              <button (click)="closeContactModal()" class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-lg transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <button (click)="closeContactModal()" class="p-1.5 rounded transition-colors hover:bg-[#F7F6F3]">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #9B9A97;">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
               </button>
             </div>
             <div class="p-4 space-y-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Email <span class="text-red-500">*</span></label>
+                <label class="block text-sm font-medium mb-1" style="color: #37352F;">Email <span style="color: #E03E3E;">*</span></label>
                 <input type="email" [(ngModel)]="contactEmail"
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                       class="w-full px-4 py-2 text-sm rounded-lg focus:outline-none"
+                       style="border: 1px solid #E9E9E7; color: #37352F;"
                        placeholder="correo@ejemplo.com">
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                <label class="block text-sm font-medium mb-1" style="color: #37352F;">Nombre</label>
                 <input type="text" [(ngModel)]="contactName"
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                       class="w-full px-4 py-2 text-sm rounded-lg focus:outline-none"
+                       style="border: 1px solid #E9E9E7; color: #37352F;"
                        placeholder="Nombre opcional">
               </div>
               <div class="flex items-center gap-2">
                 <input type="checkbox" [(ngModel)]="contactSubscribed" 
-                       id="subscribed" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
-                <label for="subscribed" class="text-sm text-gray-700">Suscrito</label>
+                       id="subscribed" class="w-4 h-4 rounded" style="accent-color: #37352F;">
+                <label for="subscribed" class="text-sm" style="color: #37352F;">Suscrito</label>
               </div>
               @if (contactError()) {
-                <div class="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p class="text-red-600 text-sm">{{ contactError() }}</p>
+                <div class="p-3 rounded-lg" style="background-color: rgba(224, 62, 62, 0.1);">
+                  <p class="text-sm" style="color: #E03E3E;">{{ contactError() }}</p>
                 </div>
               }
             </div>
-            <div class="flex justify-end gap-3 p-4 border-t border-gray-200 bg-gray-50">
+            <div class="flex justify-end gap-2 p-4" style="border-top: 1px solid #E9E9E7;">
               <button (click)="closeContactModal()"
-                      class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                      class="px-4 py-2 rounded text-sm transition-colors hover:bg-[#F7F6F3]"
+                      style="color: #37352F;">
                 Cancelar
               </button>
               <button (click)="saveContact()"
                       [disabled]="!contactEmail.trim() || isSavingContact()"
-                      class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2 transition-colors">
+                      class="px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      style="background-color: #37352F; color: white;">
                 @if (isSavingContact()) {
-                  <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+                  <span class="inline-flex items-center">
+                    <svg class="w-4 h-4 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Guardando...
+                  </span>
+                } @else {
+                  Guardar
                 }
-                {{ isSavingContact() ? 'Guardando...' : 'Guardar' }}
               </button>
             </div>
           </div>
         </div>
       }
 
-      <!-- Modal Importar CSV/Excel -->
+      <!-- Modal Importar CSV/Excel estilo Notion -->
       @if (showImportModal()) {
-        <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" (click)="closeImportModal()">
-          <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden" (click)="$event.stopPropagation()">
-            <div class="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+        <div class="fixed inset-0 flex items-center justify-center z-50" style="background-color: rgba(0, 0, 0, 0.4);" (click)="closeImportModal()">
+          <div class="w-full max-w-lg overflow-hidden rounded-lg" style="background-color: white;" (click)="$event.stopPropagation()">
+            <div class="flex items-center justify-between p-4" style="border-bottom: 1px solid #E9E9E7;">
               <div>
-                <h3 class="text-lg font-semibold text-gray-900">Importar Contactos</h3>
-                <p class="text-sm text-gray-500">Sube un archivo CSV o Excel con tus contactos</p>
+                <h3 class="text-base font-medium" style="color: #37352F;">Importar Contactos</h3>
+                <p class="text-xs" style="color: #787774;">Sube un archivo CSV o Excel con tus contactos</p>
               </div>
-              <button (click)="closeImportModal()" class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-lg transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <button (click)="closeImportModal()" class="p-1.5 rounded transition-colors hover:bg-[#F7F6F3]">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #9B9A97;">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
               </button>
@@ -347,122 +426,128 @@ interface ParsedContact {
             
             <div class="p-4 space-y-4">
               @if (importSuccess()) {
-                <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <div class="flex items-center gap-2 text-green-800">
+                <div class="p-4 rounded-lg" style="background-color: rgba(15, 123, 108, 0.1);">
+                  <div class="flex items-center gap-2" style="color: #0F7B6C;">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
-                    <span class="font-medium">¡Importación exitosa!</span>
+                    <span class="font-medium text-sm">¡Importación exitosa!</span>
                   </div>
-                  <p class="text-green-700 text-sm mt-1">Los contactos han sido importados correctamente.</p>
+                  <p class="text-sm mt-1" style="color: #0F7B6C;">Los contactos han sido importados correctamente.</p>
                 </div>
               } @else {
                 @if (!isFileValid()) {
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Archivo CSV o Excel</label>
-                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition-colors">
+                    <label class="block text-sm font-medium mb-2" style="color: #37352F;">Archivo CSV o Excel</label>
+                    <div class="rounded-lg p-6 text-center transition-colors cursor-pointer" 
+                         style="border: 2px dashed #E9E9E7;">
                       <input type="file" 
                              (change)="onFileSelected($event)" 
                              accept=".csv,.xlsx,.xls"
                              class="hidden" 
                              id="file-upload">
                       <label for="file-upload" class="cursor-pointer">
-                        <svg class="w-10 h-10 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-10 h-10 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #9B9A97;">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
                         </svg>
-                        <p class="text-gray-600">
+                        <p class="text-sm" style="color: #37352F;">
                           @if (selectedFile()) {
                             {{ selectedFile()?.name }}
                           } @else {
                             Haz clic para seleccionar un archivo
                           }
                         </p>
-                        <p class="text-gray-400 text-sm mt-1">Archivos soportados: CSV, Excel (.xlsx, .xls)</p>
+                        <p class="text-xs mt-1" style="color: #9B9A97;">Archivos soportados: CSV, Excel (.xlsx, .xls)</p>
                       </label>
                     </div>
                   </div>
                 } @else {
                   <div class="space-y-4">
-                    <div class="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="flex items-center gap-2 text-sm p-3 rounded-lg" style="background-color: #F7F6F3; color: #37352F;">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #787774;">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                       </svg>
                       <span>Archivo: <strong>{{ selectedFile()?.name }}</strong></span>
-                      <button (click)="resetFileSelection()" class="text-indigo-600 hover:text-indigo-700 ml-auto">
+                      <button (click)="resetFileSelection()" class="text-sm hover:underline ml-auto" style="color: #529CCA;">
                         Cambiar archivo
                       </button>
                     </div>
 
                     <!-- Selección de lista -->
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-2">Lista de destino</label>
+                      <label class="block text-sm font-medium mb-2" style="color: #37352F;">Lista de destino</label>
                       @if (showCreateListFromImport()) {
                         <!-- Formulario para crear nueva lista -->
                         <div class="flex gap-2">
                           <input type="text" 
                                  [(ngModel)]="newListName"
-                                 class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                 class="flex-1 px-4 py-2 text-sm rounded-lg focus:outline-none"
+                                 style="border: 1px solid #E9E9E7; color: #37352F;"
                                  placeholder="Nombre de la nueva lista">
                           <button (click)="createListFromImport()"
                                   [disabled]="!newListName.trim() || isSavingList()"
-                                  class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300">
+                                  class="px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-40"
+                                  style="background-color: #37352F; color: white;">
                             {{ isSavingList() ? 'Guardando...' : 'Crear' }}
                           </button>
                           <button (click)="cancelCreateListFromImport()"
-                                  class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+                                  class="px-4 py-2 rounded text-sm transition-colors hover:bg-[#F7F6F3]"
+                                  style="color: #37352F;">
                             Cancelar
                           </button>
                         </div>
                         @if (listError()) {
-                          <p class="text-red-600 text-sm mt-2">{{ listError() }}</p>
+                          <p class="text-sm mt-2" style="color: #E03E3E;">{{ listError() }}</p>
                         }
                       } @else {
                         <div class="flex gap-2">
                           <select [(ngModel)]="selectedImportListId" 
-                                  class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                  class="flex-1 px-4 py-2 text-sm rounded-lg focus:outline-none"
+                                  style="border: 1px solid #E9E9E7; color: #37352F;">
                             <option value="">Selecciona una lista...</option>
                             @for (list of contactLists(); track list.id) {
                               <option [value]="list.id">{{ list.name }}</option>
                             }
                           </select>
                           <button (click)="showCreateListFromImport.set(true)"
-                                  class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                  class="inline-flex items-center px-4 py-2 rounded text-sm font-medium transition-colors"
+                                  style="background-color: #37352F; color: white;">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                             </svg>
-                            Nueva Lista
+                            Nueva
                           </button>
                         </div>
                       }
                     </div>
 
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-2">Columnas detectadas</label>
+                      <label class="block text-sm font-medium mb-2" style="color: #37352F;">Columnas detectadas</label>
                       <div class="flex flex-wrap gap-2">
                         @for (column of detectedColumns(); track column) {
-                          <span class="px-3 py-1 bg-indigo-100 text-indigo-800 text-sm rounded-full">
+                          <span class="text-xs px-2 py-1 rounded" style="background-color: rgba(144, 101, 176, 0.15); color: #9065B0;">
                             {{ column }}
                           </span>
                         }
                       </div>
-                      <p class="text-sm text-gray-500 mt-2">{{ totalContactsFound() }} contactos encontrados</p>
+                      <p class="text-sm mt-2" style="color: #787774;">{{ totalContactsFound() }} contactos encontrados</p>
                     </div>
 
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-2">Vista previa (primeros 3 registros)</label>
-                      <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                      <label class="block text-sm font-medium mb-2" style="color: #37352F;">Vista previa (primeros 3 registros)</label>
+                      <div class="overflow-x-auto rounded-lg" style="border: 1px solid #E9E9E7;">
                         <table class="w-full text-sm">
-                          <thead class="bg-gray-50">
-                            <tr>
-                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                          <thead>
+                            <tr style="background-color: #F7F6F3; border-bottom: 1px solid #E9E9E7;">
+                              <th class="px-3 py-2 text-left text-xs font-medium" style="color: #787774;">Email</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium" style="color: #787774;">Name</th>
                             </tr>
                           </thead>
-                          <tbody class="divide-y divide-gray-200">
+                          <tbody>
                             @for (row of previewData(); track $index) {
-                              <tr class="hover:bg-gray-50">
-                                <td class="px-3 py-2 text-gray-700">{{ row.email || '-' }}</td>
-                                <td class="px-3 py-2 text-gray-700">{{ row.name || '-' }}</td>
+                              <tr class="transition-colors hover:bg-[#F7F6F3]" style="border-bottom: 1px solid #E9E9E7;">
+                                <td class="px-3 py-2" style="color: #37352F;">{{ row.email || '-' }}</td>
+                                <td class="px-3 py-2" style="color: #787774;">{{ row.name || '-' }}</td>
                               </tr>
                             }
                           </tbody>
@@ -470,8 +555,8 @@ interface ParsedContact {
                       </div>
                     </div>
 
-                    <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <p class="text-blue-700 text-sm">
+                    <div class="p-3 rounded-lg" style="background-color: rgba(82, 156, 202, 0.1);">
+                      <p class="text-sm" style="color: #529CCA;">
                         El archivo será procesado por el backend. Asegúrate de que la columna "email" exista en el archivo.
                       </p>
                     </div>
@@ -479,29 +564,35 @@ interface ParsedContact {
                 }
 
                 @if (importError()) {
-                  <div class="p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p class="text-red-600 text-sm">{{ importError() }}</p>
+                  <div class="p-3 rounded-lg" style="background-color: rgba(224, 62, 62, 0.1);">
+                    <p class="text-sm" style="color: #E03E3E;">{{ importError() }}</p>
                   </div>
                 }
               }
             </div>
             
-            <div class="flex justify-end gap-3 p-4 border-t border-gray-200 bg-gray-50">
+            <div class="flex justify-end gap-2 p-4" style="border-top: 1px solid #E9E9E7;">
               <button (click)="closeImportModal()"
-                      class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                      class="px-4 py-2 rounded text-sm transition-colors hover:bg-[#F7F6F3]"
+                      style="color: #37352F;">
                 {{ importSuccess() ? 'Cerrar' : 'Cancelar' }}
               </button>
               @if (!importSuccess() && isFileValid()) {
                 <button (click)="handleFileUpload()"
                         [disabled]="!selectedImportListId || isImporting()"
-                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2 transition-colors">
+                        class="px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        style="background-color: #0F7B6C; color: white;">
                   @if (isImporting()) {
-                    <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
+                    <span class="inline-flex items-center">
+                      <svg class="w-4 h-4 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Importando...
+                    </span>
+                  } @else {
+                    Importar contactos
                   }
-                  {{ isImporting() ? 'Importando...' : 'Importar contactos' }}
                 </button>
               }
             </div>
@@ -767,6 +858,20 @@ export class ContactListComponent implements OnInit {
       return list.totalContacts;
     }
     return this.contactService.contactsCountByList()[list.id] || 0;
+  }
+
+  getTotalContacts(): number {
+    return this.contactLists().reduce((total, list) => total + this.getContactCount(list), 0);
+  }
+
+  getCampaignsCount(): number {
+    // This could be enhanced to show actual campaigns count per list
+    return this.contactLists().length;
+  }
+
+  getSubscribedCount(): number {
+    // This could be enhanced to show actual subscribed contacts
+    return this.getTotalContacts();
   }
 
   // Importación
