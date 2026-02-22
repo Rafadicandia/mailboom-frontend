@@ -78,4 +78,5 @@ export interface EmailDesign {
   content: ContentBlock[];
   footer: FooterConfig;
   customHtml?: string;
+  editorContent?: any; // JSON del editor TipTap para poder editarlo después
 }

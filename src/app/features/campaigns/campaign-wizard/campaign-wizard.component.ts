@@ -465,8 +465,28 @@ export class CampaignWizardComponent implements OnInit {
     const design = this.campaignDesign();
     if (!design) return '';
     
-    if (design.mode === 'custom-html' && design.customHtml) {
-      return design.customHtml;
+    // Si hay HTML personalizado (ya sea de custom-html o del editor), usarlo directamente
+    if (design.customHtml) {
+      // Verificar si ya tiene estructura HTML completa
+      if (design.customHtml.toLowerCase().includes('<!doctype') || design.customHtml.toLowerCase().includes('<html')) {
+        return design.customHtml;
+      }
+      // Si no tiene estructura, envolverlo en una estructura HTML básica
+      return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { margin: 0; padding: 20px; font-family: Arial, sans-serif; background-color: ${design.backgroundColor || '#ffffff'}; }
+    img { max-width: 100%; height: auto; }
+    a { color: #4f46e5; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  ${design.customHtml}
+</body>
+</html>`;
     }
     
     return this.generateHtmlFromDesign(design);
@@ -559,9 +579,8 @@ export class CampaignWizardComponent implements OnInit {
 
     this.isSubmitting.set(true);
     
-    const htmlContent = design.mode === 'custom-html' 
-      ? (design.customHtml || '') 
-      : this.generateHtmlFromDesign(design);
+    // Usar el HTML personalizado si está disponible, sino generar desde el diseño
+    const htmlContent = design.customHtml || this.generateHtmlFromDesign(design);
     
     const ownerId = this.authService.currentUser()?.id || '';
     
@@ -694,9 +713,8 @@ export class CampaignWizardComponent implements OnInit {
   executeSendCampaign(design: EmailDesign, audience: ContactList) {
     this.isSubmitting.set(true);
     
-    const htmlContent = design.mode === 'custom-html' 
-      ? (design.customHtml || '') 
-      : this.generateHtmlFromDesign(design);
+    // Usar el HTML generado por el editor directamente
+    const htmlContent = design.customHtml || this.generateHtmlFromDesign(design);
     
     const ownerId = this.authService.currentUser()?.id || '';
     
