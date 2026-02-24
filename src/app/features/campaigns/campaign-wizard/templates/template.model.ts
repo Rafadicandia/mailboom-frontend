@@ -73,7 +73,8 @@ export interface ContentBlock {
 export interface EmailDesign {
   mode: EditorMode;
   backgroundColor: string;
-  contentMaxWidth: number;
+  fontFamily?: string;
+  contentMaxWidth?: number;
   header: HeaderConfig;
   content: ContentBlock[];
   footer: FooterConfig;

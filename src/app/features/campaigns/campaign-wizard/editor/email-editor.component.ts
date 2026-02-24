@@ -14,6 +14,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Editor, Extension } from '@tiptap/core';
+import { NodeSelection } from '@tiptap/pm/state';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import TextAlign from '@tiptap/extension-text-align';
@@ -36,7 +37,6 @@ import {
   ColumnsDialogConfig
 } from './block-config-dialogs.component';
 import { emailExtensions } from './tiptap-extensions';
-import { MjmlConverterService } from './mjml-converter.service';
 import { 
   SlashCommandOption, 
   EmailDocument, 
@@ -44,6 +44,15 @@ import {
   EMAIL_FONTS, 
   FONT_SIZES 
 } from './email-block.model';
+
+/**
+ * Interfaz para representar un bloque seleccionado en el editor
+ */
+export interface SelectedBlock {
+  type: string;
+  attrs: Record<string, any>;
+  position: number;
+}
 
 // Extensión personalizada para FontSize
 declare module '@tiptap/core' {
@@ -108,7 +117,6 @@ const FontSize = TextStyle.extend({
     FooterConfigDialogComponent,
     ColumnsConfigDialogComponent
   ],
-  providers: [MjmlConverterService],
   template: `
     <div class="email-editor-container flex flex-col h-full">
       
@@ -542,8 +550,8 @@ export class EmailEditorComponent implements OnInit, OnDestroy, AfterViewInit {
   };
   
   @Output() contentChange = new EventEmitter<any>();
-  @Output() mjmlChange = new EventEmitter<string>();
   @Output() htmlChange = new EventEmitter<string>();
+  @Output() blockSelect = new EventEmitter<SelectedBlock | null>();
   
   @ViewChild('editorRef') editorRef!: ElementRef;
   @ViewChild(SlashCommandComponent) slashCommandMenu!: SlashCommandComponent;
@@ -557,6 +565,7 @@ export class EmailEditorComponent implements OnInit, OnDestroy, AfterViewInit {
   
   showTextColorPicker = signal(false);
   showBgColorPicker = signal(false);
+  selectedBlock = signal<SelectedBlock | null>(null);
   
   textColors = PRESET_COLORS.text;
   bgColors = PRESET_COLORS.background;
@@ -609,7 +618,7 @@ export class EmailEditorComponent implements OnInit, OnDestroy, AfterViewInit {
     return attrs['color'] || 'transparent';
   });
   
-  constructor(private mjmlConverter: MjmlConverterService) {}
+  constructor() {}
   
   ngOnInit() {}
   
@@ -665,6 +674,17 @@ export class EmailEditorComponent implements OnInit, OnDestroy, AfterViewInit {
         attributes: {
           class: 'focus:outline-none'
         },
+        handleClickOn: (view, pos, node, nodePos, event, direct) => {
+          // Manejar clic en nodos atom para crear NodeSelection
+          const blockTypes = ['buttonNode', 'imageNode', 'dividerNode', 'socialNode', 'columnsNode', 'headerNode', 'footerNode', 'spacerNode'];
+          if (node.type && blockTypes.includes(node.type.name)) {
+            console.log('[DEBUG] handleClickOn - nodo atom clickeado:', node.type.name, 'pos:', nodePos);
+            const tr = view.state.tr.setSelection(NodeSelection.create(view.state.doc, nodePos));
+            view.dispatch(tr);
+            return true;
+          }
+          return false;
+        },
         handleKeyDown: (view, event) => {
           // Detectar "/" en línea vacía para mostrar slash command
           if (event.key === '/') {
@@ -692,6 +712,9 @@ export class EmailEditorComponent implements OnInit, OnDestroy, AfterViewInit {
       },
       onUpdate: ({ editor }) => {
         this.onContentUpdate(editor);
+      },
+      onSelectionUpdate: ({ editor }) => {
+        this.onSelectionUpdate(editor);
       }
     });
     
@@ -705,13 +728,66 @@ export class EmailEditorComponent implements OnInit, OnDestroy, AfterViewInit {
     const json = editor.getJSON();
     const html = editor.getHTML();
     
-    this.contentChange.emit(json);
-    this.htmlChange.emit(html);
+    console.log('[DEBUG] onContentUpdate - HTML length:', html.length);
+    console.log('[DEBUG] onContentUpdate - HTML preview:', html.substring(0, 200));
     
-    // Generar MJML
-    const document = this.mjmlConverter.convertTipTapJsonToEmailDocument(json, this.globalStyles);
-    const mjml = this.mjmlConverter.convertToMjml(document);
-    this.mjmlChange.emit(mjml);
+    this.contentChange.emit(json);
+    
+    // Generar HTML directo para email
+    const emailHtml = this.wrapInEmailTemplate(html);
+    console.log('[DEBUG] onContentUpdate - Email HTML generated, length:', emailHtml.length);
+    this.htmlChange.emit(emailHtml);
+  }
+  
+  /**
+   * Maneja cambios en la selección del editor
+   */
+  private onSelectionUpdate(editor: Editor) {
+    const { from, to } = editor.state.selection;
+    const blockTypes = ['buttonNode', 'imageNode', 'dividerNode', 'socialNode', 'columnsNode', 'headerNode', 'footerNode', 'spacerNode'];
+    
+    // Manejar NodeSelection (clic en nodos atom)
+    if (editor.state.selection instanceof NodeSelection) {
+      const node = (editor.state.selection as NodeSelection).node;
+      console.log('[DEBUG] NodeSelection detectada:', node.type.name, node.attrs);
+      if (blockTypes.includes(node.type.name)) {
+        const selectedBlock: SelectedBlock = {
+          type: node.type.name,
+          attrs: { ...node.attrs },
+          position: from
+        };
+        console.log('[DEBUG] BlockSelect emitir - tipo:', selectedBlock.type, 'attrs:', JSON.stringify(selectedBlock.attrs));
+        this.selectedBlock.set(selectedBlock);
+        this.blockSelect.emit(selectedBlock);
+        return;
+      }
+    }
+    
+    // Verificar si hay un nodo seleccionado (selección de cursor)
+    if (from === to) {
+      const $from = editor.state.doc.resolve(from);
+      
+      for (let i = $from.depth; i > 0; i--) {
+        const node = $from.node(i);
+        if (blockTypes.includes(node.type.name)) {
+          const selectedBlock: SelectedBlock = {
+            type: node.type.name,
+            attrs: { ...node.attrs },
+            position: $from.before(i)
+          };
+          console.log('[DEBUG] Bloque encontrado por cursor:', node.type.name, node.attrs);
+          this.selectedBlock.set(selectedBlock);
+          this.blockSelect.emit(selectedBlock);
+          return;
+        }
+      }
+    }
+    
+    // Si no hay bloque personalizado seleccionado
+    if (this.selectedBlock() !== null) {
+      this.selectedBlock.set(null);
+      this.blockSelect.emit(null);
+    }
   }
   
   /**
@@ -841,6 +917,8 @@ export class EmailEditorComponent implements OnInit, OnDestroy, AfterViewInit {
           align: config.align || 'center'
         }
       })
+      .insertContent({ type: 'paragraph' })
+      .focus()
       .run();
   }
   
@@ -862,6 +940,8 @@ export class EmailEditorComponent implements OnInit, OnDestroy, AfterViewInit {
           padding: '20px 0'
         }
       })
+      .insertContent({ type: 'paragraph' })
+      .focus()
       .run();
   }
   
@@ -887,6 +967,8 @@ export class EmailEditorComponent implements OnInit, OnDestroy, AfterViewInit {
           iconSpacing: '16px'
         }
       })
+      .insertContent({ type: 'paragraph' })
+      .focus()
       .run();
   }
   
@@ -914,6 +996,8 @@ export class EmailEditorComponent implements OnInit, OnDestroy, AfterViewInit {
           backgroundColor: config.backgroundColor
         }
       })
+      .insertContent({ type: 'paragraph' })
+      .focus()
       .run();
   }
   
@@ -921,66 +1005,133 @@ export class EmailEditorComponent implements OnInit, OnDestroy, AfterViewInit {
    * Inserta un bloque de header
    */
   private insertHeaderBlock() {
-    this.headerConfigDialog?.show();
+    console.log('[DEBUG] insertHeaderBlock called');
+    console.log('[DEBUG] headerConfigDialog available:', !!this.headerConfigDialog);
+    
+    if (this.headerConfigDialog) {
+      console.log('[DEBUG] Calling headerConfigDialog.show()');
+      this.headerConfigDialog.show();
+    } else {
+      console.error('[DEBUG] headerConfigDialog is not available!');
+    }
   }
   
   /**
    * Callback cuando se confirma la configuración de header
    */
   onHeaderConfigConfirm(config: HeaderDialogConfig) {
-    const editor = this.editor();
-    if (!editor) return;
+    console.log('[DEBUG] onHeaderConfigConfirm called with config:', config);
     
-    editor.chain()
-      .focus()
-      .insertContent({
-        type: 'headerNode',
-        attrs: {
-          useImage: config.useImage,
-          logoUrl: config.logoUrl,
-          logoWidth: config.logoWidth,
-          text: config.text,
-          backgroundColor: config.backgroundColor,
-          textColor: config.textColor,
-          align: config.align,
-          padding: config.padding
-        }
-      })
-      .run();
+    const editor = this.editor();
+    if (!editor) {
+      console.error('[DEBUG] Editor not available!');
+      return;
+    }
+    
+    // Verificar que config tenga valores válidos
+    if (!config) {
+      console.error('[DEBUG] Config is null or undefined!');
+      return;
+    }
+    
+    try {
+      // Insertar el header al inicio del documento
+      // Primero creamos un párrafo vacío al inicio para tener donde insertar
+      const headerAttrs = {
+        useImage: config.useImage ?? false,
+        logoUrl: config.logoUrl ?? '',
+        logoWidth: config.logoWidth ?? '200px',
+        text: config.text ?? 'Mi Empresa',
+        backgroundColor: config.backgroundColor ?? '#ffffff',
+        textColor: config.textColor ?? '#333333',
+        align: config.align ?? 'center',
+        padding: config.padding ?? '20px'
+      };
+      
+      console.log('[DEBUG] Inserting header with attrs:', headerAttrs);
+      
+      // Usar insertContentAt con la posición 0 para insertar al inicio
+      const result = editor.chain()
+        .focus()
+        .insertContentAt(0, {
+          type: 'headerNode',
+          attrs: headerAttrs
+        })
+        .run();
+      
+      console.log('[DEBUG] Header insert result:', result);
+      console.log('[DEBUG] Header inserted successfully');
+    } catch (err) {
+      console.error('[DEBUG] Error inserting header:', err);
+    }
+  }
+
+  /**
+   * Callback cuando se confirma la configuración de footer
+   */
+  onFooterConfigConfirm(config: FooterDialogConfig) {
+    console.log('[DEBUG] onFooterConfigConfirm called with config:', config);
+    
+    const editor = this.editor();
+    if (!editor) {
+      console.error('[DEBUG] Editor not available!');
+      return;
+    }
+    
+    // Verificar que config tenga valores válidos
+    if (!config) {
+      console.error('[DEBUG] Config is null or undefined!');
+      return;
+    }
+    
+    try {
+      const footerAttrs = {
+        companyName: config.companyName ?? 'Mi Empresa',
+        address: config.address ?? '',
+        phone: config.phone ?? '',
+        email: config.email ?? '',
+        website: config.website ?? '',
+        showUnsubscribe: config.showUnsubscribe ?? true,
+        backgroundColor: config.backgroundColor ?? '#f9fafb',
+        textColor: config.textColor ?? '#6b7280',
+        align: config.align ?? 'center',
+        padding: config.padding ?? '20px'
+      };
+      
+      console.log('[DEBUG] Inserting footer with attrs:', footerAttrs);
+      
+      // Obtener la posición final del documento
+      const docSize = editor.state.doc.content.size;
+      
+      // Usar insertContentAt para insertar al final
+      const result = editor.chain()
+        .focus()
+        .insertContentAt(docSize, {
+          type: 'footerNode',
+          attrs: footerAttrs
+        })
+        .run();
+      
+      console.log('[DEBUG] Footer insert result:', result);
+      console.log('[DEBUG] Footer inserted successfully');
+    } catch (err) {
+      console.error('[DEBUG] Error inserting footer:', err);
+    }
   }
   
   /**
    * Inserta un bloque de footer
    */
   private insertFooterBlock() {
-    this.footerConfigDialog?.show();
-  }
-  
-  /**
-   * Callback cuando se confirma la configuración de footer
-   */
-  onFooterConfigConfirm(config: FooterDialogConfig) {
-    const editor = this.editor();
-    if (!editor) return;
+    console.log('[DEBUG] insertFooterBlock called');
+    console.log('[DEBUG] footerConfigDialog available:', !!this.footerConfigDialog);
     
-    editor.chain()
-      .focus()
-      .insertContent({
-        type: 'footerNode',
-        attrs: {
-          companyName: config.companyName,
-          address: config.address,
-          phone: config.phone,
-          email: config.email,
-          website: config.website,
-          showUnsubscribe: config.showUnsubscribe,
-          backgroundColor: config.backgroundColor,
-          textColor: config.textColor,
-          align: config.align,
-          padding: config.padding
-        }
-      })
-      .run();
+    if (this.footerConfigDialog) {
+      console.log('[DEBUG] Calling footerConfigDialog.show()');
+      this.footerConfigDialog.show();
+    } else {
+      console.error('[DEBUG] footerConfigDialog is not available!');
+    }
   }
   
   /**
@@ -999,6 +1150,8 @@ export class EmailEditorComponent implements OnInit, OnDestroy, AfterViewInit {
           backgroundColor: 'transparent'
         }
       })
+      .insertContent({ type: 'paragraph' })
+      .focus()
       .run();
   }
   
@@ -1134,21 +1287,47 @@ export class EmailEditorComponent implements OnInit, OnDestroy, AfterViewInit {
   }
   
   /**
-   * Obtiene el contenido actual del editor en formato HTML
+   * Obtiene el contenido actual del editor en formato HTML para email
    */
   getHtml(): string {
-    return this.editor()?.getHTML() || '';
+    const html = this.editor()?.getHTML() || '';
+    return this.wrapInEmailTemplate(html);
   }
   
   /**
-   * Obtiene el MJML generado
+   * Envolver el contenido HTML en una plantilla de email básica
    */
-  getMjml(): string {
-    const json = this.getContent();
-    if (!json) return '';
+  private wrapInEmailTemplate(content: string): string {
+    const fontFamily = this.globalStyles.fontFamily || 'Arial, sans-serif';
+    const backgroundColor = this.globalStyles.backgroundColor || '#f5f5f5';
+    const maxWidth = this.globalStyles.maxWidth || 600;
     
-    const document = this.mjmlConverter.convertTipTapJsonToEmailDocument(json, this.globalStyles);
-    return this.mjmlConverter.convertToMjml(document);
+    return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title></title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: ${fontFamily};
+      background-color: ${backgroundColor};
+    }
+    .email-container {
+      max-width: ${maxWidth}px;
+      margin: 0 auto;
+      background-color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+  <div class="email-container">
+    ${content}
+  </div>
+</body>
+</html>`;
   }
   
   /**
@@ -1156,5 +1335,72 @@ export class EmailEditorComponent implements OnInit, OnDestroy, AfterViewInit {
    */
   setContent(content: any) {
     this.editor()?.commands.setContent(content);
+  }
+  
+  /**
+   * Actualiza los atributos de un bloque existente
+   */
+  updateBlockAttributes(position: number, attrs: Record<string, any>) {
+    const editor = this.editor();
+    if (!editor) return;
+    
+    // Obtener el tipo de nodo en la posición
+    const node = editor.state.doc.nodeAt(position);
+    if (!node) return;
+    
+    const nodeType = node.type.name;
+    
+    // Usar setNodeSelection para seleccionar el nodo y luego actualizar
+    editor.chain()
+      .focus()
+      .setNodeSelection(position)
+      .run();
+    
+    // Actualizar los atributos del nodo
+    // Desestructuramos los attrs actuales y mezclamos con los nuevos
+    const currentAttrs = node.attrs;
+    const newAttrs = { ...currentAttrs, ...attrs };
+    
+    // Usar dispatch para actualizar el nodo directamente
+    const tr = editor.state.tr.setNodeMarkup(position, undefined, newAttrs);
+    editor.view.dispatch(tr);
+      
+    // Emitir el bloque actualizado
+    const updatedNode = editor.state.doc.nodeAt(position);
+    if (updatedNode) {
+      const selectedBlock: SelectedBlock = {
+        type: updatedNode.type.name,
+        attrs: { ...updatedNode.attrs },
+        position: position
+      };
+      this.selectedBlock.set(selectedBlock);
+      this.blockSelect.emit(selectedBlock);
+    }
+  }
+  
+  /**
+   * Obtiene el bloque actualmente seleccionado
+   */
+  getSelectedBlock(): SelectedBlock | null {
+    return this.selectedBlock();
+  }
+  
+  /**
+   * Elimina el bloque actualmente seleccionado
+   */
+  deleteSelectedBlock() {
+    const editor = this.editor();
+    if (!editor) return;
+    
+    const selected = this.selectedBlock();
+    if (selected) {
+      editor.chain()
+        .focus()
+        .deleteRange({ from: selected.position, to: selected.position + 1 })
+        .run();
+      
+      this.selectedBlock.set(null);
+      this.blockSelect.emit(null);
+    }
   }
 }

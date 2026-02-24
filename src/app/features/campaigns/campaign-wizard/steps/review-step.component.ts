@@ -4,6 +4,8 @@ import {
   Output, 
   EventEmitter, 
   OnInit, 
+  OnChanges,
+  SimpleChanges,
   signal, 
   ViewChild,
   ChangeDetectorRef
@@ -11,13 +13,6 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EmailDesign, EditorMode } from '../templates/template.model';
-import { 
-  EmailEditorComponent, 
-  MjmlConverterService,
-  EmailDocument,
-  PRESET_COLORS,
-  EMAIL_FONTS
-} from '../editor';
 
 /**
  * Componente de paso de revisión con vista previa del email
@@ -28,8 +23,7 @@ import {
   standalone: true,
   imports: [
     CommonModule, 
-    FormsModule, 
-    EmailEditorComponent
+    FormsModule
   ],
   template: `
     <div class="review-step-container h-full flex flex-col">
@@ -98,7 +92,7 @@ import {
     }
   `]
 })
-export class ReviewStepComponent implements OnInit {
+export class ReviewStepComponent implements OnInit, OnChanges {
   @Input() design?: EmailDesign;
   @Output() onNext = new EventEmitter<void>();
   @Output() onBack = new EventEmitter<void>();
@@ -106,12 +100,20 @@ export class ReviewStepComponent implements OnInit {
   previewMode = signal<'desktop' | 'mobile'>('desktop');
   
   constructor(
-    private cdr: ChangeDetectorRef,
-    private mjmlConverter: MjmlConverterService
+    private cdr: ChangeDetectorRef
   ) {}
   
   ngOnInit() {
     if (this.design) {
+      this.applyInitialDesign();
+    }
+  }
+  
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['design'] && this.design) {
+      console.log('[DEBUG review-step] ngOnChanges - Design received');
+      console.log('[DEBUG review-step] customHtml length:', this.design.customHtml?.length || 0);
+      console.log('[DEBUG review-step] customHtml preview:', this.design.customHtml?.substring(0, 300) || 'empty');
       this.applyInitialDesign();
     }
   }
@@ -123,10 +125,156 @@ export class ReviewStepComponent implements OnInit {
     this.cdr.detectChanges();
   }
   
+  /**
+   * Genera el HTML del header si está habilitado
+   */
+  private generateHeaderHtml(): string {
+    if (!this.design?.header?.enabled) {
+      return '';
+    }
+
+    const header = this.design.header;
+    const bgColor = header.backgroundColor || '#ffffff';
+    const txtColor = header.textColor || '#333333';
+    const height = header.height || 60;
+
+    let content = '';
+
+    if (header.useImage && header.imageUrl) {
+      // Usar imagen/logo
+      content = `<img src="${header.imageUrl}" alt="${header.text || 'Logo'}" style="max-height: ${height}px; max-width: 200px;" />`;
+    } else if (header.text) {
+      // Usar texto
+      content = `<span style="font-size: 18px; font-weight: bold; color: ${txtColor};">${header.text}</span>`;
+    }
+
+    if (!content) {
+      return '';
+    }
+
+    return `<table width="100%" cellpadding="0" cellspacing="0" style="background-color: ${bgColor}; width: 100%;">
+      <tr>
+        <td align="center" style="padding: 15px;">
+          ${content}
+        </td>
+      </tr>
+    </table>`;
+  }
+
+  /**
+   * Genera el HTML del footer si está habilitado
+   */
+  private generateFooterHtml(): string {
+    if (!this.design?.footer?.enabled) {
+      return '';
+    }
+
+    const footer = this.design.footer;
+    const bgColor = footer.backgroundColor || '#f9fafb';
+    const txtColor = footer.textColor || '#6b7280';
+
+    const companyName = footer.companyName || '';
+    const address = footer.address || '';
+    const phone = footer.phone || '';
+    const email = footer.email || '';
+    const website = footer.website || '';
+    const customText = footer.customText || '';
+
+    let footerContent = '';
+
+    // Información de la empresa
+    if (companyName) {
+      footerContent += `<p style="margin: 0 0 10px; font-weight: bold; color: ${txtColor};">${companyName}</p>`;
+    }
+
+    // Dirección
+    if (address) {
+      footerContent += `<p style="margin: 0 0 5px; color: ${txtColor}; font-size: 12px;">${address}</p>`;
+    }
+
+    // Teléfono
+    if (phone) {
+      footerContent += `<p style="margin: 0 0 5px; color: ${txtColor}; font-size: 12px;">Tel: ${phone}</p>`;
+    }
+
+    // Email
+    if (email) {
+      footerContent += `<p style="margin: 0 0 5px; color: ${txtColor}; font-size: 12px;"><a href="mailto:${email}" style="color: ${txtColor}; text-decoration: underline;">${email}</a></p>`;
+    }
+
+    // Website
+    if (website) {
+      footerContent += `<p style="margin: 0 0 5px; color: ${txtColor}; font-size: 12px;"><a href="${website}" style="color: ${txtColor}; text-decoration: underline;">${website}</a></p>`;
+    }
+
+    // Texto personalizado
+    if (customText) {
+      footerContent += `<p style="margin: 15px 0 10px; color: ${txtColor}; font-size: 12px;">${customText}</p>`;
+    }
+
+    // Redes sociales
+    if (footer.socialLinks && Object.keys(footer.socialLinks).length > 0) {
+      footerContent += '<p style="margin: 15px 0;">';
+      if (footer.socialLinks.facebook) {
+        footerContent += `<a href="${footer.socialLinks.facebook}" style="display: inline-block; margin-right: 10px; color: ${txtColor};">Facebook</a>`;
+      }
+      if (footer.socialLinks.twitter) {
+        footerContent += `<a href="${footer.socialLinks.twitter}" style="display: inline-block; margin-right: 10px; color: ${txtColor};">Twitter</a>`;
+      }
+      if (footer.socialLinks.instagram) {
+        footerContent += `<a href="${footer.socialLinks.instagram}" style="display: inline-block; margin-right: 10px; color: ${txtColor};">Instagram</a>`;
+      }
+      if (footer.socialLinks.linkedin) {
+        footerContent += `<a href="${footer.socialLinks.linkedin}" style="display: inline-block; margin-right: 10px; color: ${txtColor};">LinkedIn</a>`;
+      }
+      footerContent += '</p>';
+    }
+
+    // Enlace de cancelación de suscripción
+    if (footer.showUnsubscribe) {
+      footerContent += `<p style="margin: 20px 0 0; border-top: 1px solid #e5e7eb; padding-top: 15px;">
+        <a href="{{unsubscribe_link}}" style="color: ${txtColor}; font-size: 11px; text-decoration: underline;">Cancelar suscripción</a>
+      </p>`;
+    }
+
+    return `<table width="100%" cellpadding="0" cellspacing="0" style="background-color: ${bgColor}; width: 100%;">
+      <tr>
+        <td align="center" style="padding: 20px 15px; color: ${txtColor};">
+          ${footerContent}
+        </td>
+      </tr>
+    </table>`;
+  }
+
   generatePreviewHtml(): string {
+    console.log('[DEBUG review-step] generatePreviewHtml called');
+    
     if (!this.design) {
+      console.log('[DEBUG review-step] No design!');
       return '<!DOCTYPE html><html><head></head><body style="font-family: Arial, sans-serif; padding: 40px; color: #666; text-align: center;"><p>No hay diseño para mostrar</p></body></html>';
     }
+    
+    // DEBUG: Log del customHtml para diagnosticar el problema
+    console.log('[DEBUG review-step] customHtml exists:', !!this.design.customHtml);
+    if (this.design.customHtml) {
+      console.log('[DEBUG review-step] customHtml length:', this.design.customHtml.length);
+      console.log('[DEBUG review-step] customHtml preview:', this.design.customHtml.substring(0, 500));
+      console.log('[DEBUG review-step] customHtml contains < tag:', this.design.customHtml.includes('<'));
+      console.log('[DEBUG review-step] customHtml contains &lt;:', this.design.customHtml.includes('&lt;'));
+    }
+    
+    // Si hay customHtml, retornarlo directamente porque ya incluye la estructura HTML completa
+    // con estilos desde el editor (wrapInEmailTemplate)
+    if (this.design.customHtml && this.design.customHtml.trim().length > 0) {
+      console.log('[DEBUG review-step] Returning customHtml directly (already has full structure with styles)');
+      return this.design.customHtml;
+    }
+    
+    // Generar header HTML
+    const headerHtml = this.generateHeaderHtml();
+    
+    // Generar footer HTML
+    const footerHtml = this.generateFooterHtml();
     
     // Convertir los bloques de contenido a HTML
     const htmlContent = this.design.content.map(block => {
@@ -158,6 +306,10 @@ export class ReviewStepComponent implements OnInit {
     }
     
     // Incluir estilos CSS para que el contenido se vea correctamente
+    const fontFamily = this.design.fontFamily || 'Arial, sans-serif';
+    const bgColor = this.design.backgroundColor || '#ffffff';
+    const maxWidth = this.design.contentMaxWidth || 600;
+    
     return `<!DOCTYPE html>
 <html>
 <head>
@@ -170,11 +322,18 @@ export class ReviewStepComponent implements OnInit {
     body { 
       margin: 0; 
       padding: 20px; 
-      font-family: Arial, sans-serif; 
-      background-color: ${this.design.backgroundColor || '#ffffff'};
+      font-family: ${fontFamily}; 
+      background-color: ${bgColor};
       font-size: 16px;
       line-height: 1.6;
       color: #333;
+    }
+    
+    /* Contenedor del email */
+    .email-container {
+      max-width: ${maxWidth}px;
+      margin: 0 auto;
+      background-color: #ffffff;
     }
     
     /* Tipografía base */
@@ -210,15 +369,26 @@ export class ReviewStepComponent implements OnInit {
   </style>
 </head>
 <body>
+  ${headerHtml}
   ${htmlContent}
+  ${footerHtml}
 </body>
 </html>`;
   }
   
   isValid(): boolean {
-    return this.design !== undefined && 
-           this.design.content !== undefined && 
-           this.design.content.length > 0;
+    if (!this.design) return false;
+    
+    // Verificar si hay contenido en bloques del editor
+    const hasContentBlocks = this.design.content !== undefined && 
+                             this.design.content.length > 0;
+    
+    // Verificar si hay HTML personalizado
+    const hasCustomHtml = this.design.customHtml !== undefined && 
+                          this.design.customHtml.trim().length > 0;
+    
+    // El diseño es válido si tiene bloques de contenido O si tiene HTML personalizado
+    return hasContentBlocks || hasCustomHtml;
   }
   
   continue() {

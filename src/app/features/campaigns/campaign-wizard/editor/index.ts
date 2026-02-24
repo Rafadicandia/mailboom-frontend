@@ -1,9 +1,6 @@
 // Modelos
 export * from './email-block.model';
 
-// Servicio
-export * from './mjml-converter.service';
-
 // Extensiones TipTap
 export * from './tiptap-extensions';
 

@@ -1,5 +1,5 @@
 import { Component, signal, OnInit, inject, ChangeDetectorRef } from '@angular/core';
-import { CommonModule, JsonPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CampaignService } from '../../../core/services/campaign.service';
@@ -7,6 +7,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { EmailDesign } from './templates/template.model';
 import { DesignStepComponent } from './steps/design-step.component';
 import { AudienceStepComponent } from './steps/audience-step.component';
+import { ReviewStepComponent } from './steps/review-step.component';
 import { NewCampaignRequest, Campaign } from '../../../core/models/campaign.model';
 import { ContactList } from '../../../core/models/contact.model';
 import { ContactService } from '../../../core/services/contact.service';
@@ -31,7 +32,7 @@ const fromDisplayNameValidators = [
 @Component({
   selector: 'app-campaign-wizard',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, JsonPipe, DesignStepComponent, AudienceStepComponent, ConfirmDialogComponent],
+  imports: [CommonModule, ReactiveFormsModule, DesignStepComponent, AudienceStepComponent, ReviewStepComponent, ConfirmDialogComponent],
   template: `
     <div [class]="currentStep() === 1 ? 'w-full px-0 py-0' : 'max-w-3xl mx-auto px-6 py-10'">
       <!-- Stepper horizontal sobre el título -->
@@ -122,56 +123,11 @@ const fromDisplayNameValidators = [
 
         <!-- PASO 4: REVISIÓN -->
         @if (currentStep() === 3) {
-          <div class="space-y-6">
-            <div>
-              <h3 class="text-base font-semibold text-notion-text mb-1">Revisión Final</h3>
-              <p class="text-sm text-notion-text-secondary">Tu campaña está lista para enviar o guardar</p>
-            </div>
-
-            <div class="bg-notion-bg-secondary rounded-notion p-4 border border-notion-border space-y-2 text-sm">
-              <p><span class="text-notion-text-secondary">Asunto:</span> <span class="font-medium text-notion-text">{{ configForm.value.subject }}</span></p>
-              <p><span class="text-notion-text-secondary">Remitente:</span> <span class="font-medium text-notion-text">{{ configForm.value.fromDisplayName }}&#64;mailboom.email</span></p>
-              <p><span class="text-notion-text-secondary">Modo:</span> <span class="font-medium text-notion-text">{{ campaignDesign()?.mode === 'custom-html' ? 'HTML personalizado' : 'Diseñador visual' }}</span></p>
-              @if (selectedAudience()) {
-                <p class="flex items-center gap-2">
-                  <span class="text-notion-text-secondary">Audiencia:</span> 
-                  <span class="font-medium flex items-center gap-1 text-notion-text">
-                    <svg class="w-4 h-4 text-notion-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                    </svg>
-                    {{ selectedAudience()?.name }} 
-                    @if (selectedAudience()?.totalContacts && selectedAudience()?.totalContacts! > 0) {
-                      ({{ selectedAudience()?.totalContacts }} contactos)
-                    } @else {
-                      <span class="text-notion-orange text-sm">(contactos: verificar)</span>
-                    }
-                  </span>
-                </p>
-              }
-            </div>
-
-            <div class="border border-notion-border rounded-notion overflow-hidden">
-              <iframe [srcdoc]="getPreviewHtml()" class="w-full h-64 border-0"></iframe>
-            </div>
-
-            <!-- Acciones -->
-            <div class="flex flex-col sm:flex-row justify-between gap-3 pt-4">
-              <button type="button" (click)="prevStep()" 
-                      class="px-5 py-2 border border-notion-border text-notion-text rounded-notion hover:bg-notion-bg-hover text-sm font-medium">
-                ← Atrás
-              </button>
-              <div class="flex gap-3">
-                <button type="button" (click)="saveDraft()" [disabled]="isSubmitting()"
-                        class="px-5 py-2 border border-notion-border text-notion-text rounded-notion hover:bg-notion-bg-hover disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium">
-                  💾 Guardar Borrador
-                </button>
-                <button type="button" (click)="goToSend()" [disabled]="isSubmitting()"
-                        class="px-5 py-2 bg-notion-text text-white rounded-notion hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium">
-                  🚀 Enviar Campaña →
-                </button>
-              </div>
-            </div>
-          </div>
+          <app-review-step
+            [design]="campaignDesign() || undefined"
+            (onNext)="goToSend()"
+            (onBack)="prevStep()">
+          </app-review-step>
         }
 
       </div>
@@ -442,6 +398,10 @@ export class CampaignWizardComponent implements OnInit {
   onDesignComplete(design: EmailDesign) {
     this.campaignDesign.set(design);
     this.nextStep();
+    // Forzar detección de cambios para actualizar la vista previa
+    setTimeout(() => {
+      this.cdr.detectChanges();
+    }, 100);
   }
 
   onListSelected(listId: string) {
@@ -465,10 +425,13 @@ export class CampaignWizardComponent implements OnInit {
     const design = this.campaignDesign();
     if (!design) return '';
     
+    console.log('Generating preview, design:', design.mode, 'has customHtml:', !!design.customHtml, 'customHtml length:', design.customHtml?.length);
+    
     // Si hay HTML personalizado (ya sea de custom-html o del editor), usarlo directamente
-    if (design.customHtml) {
+    if (design.customHtml && design.customHtml.trim().length > 0) {
       // Verificar si ya tiene estructura HTML completa
-      if (design.customHtml.toLowerCase().includes('<!doctype') || design.customHtml.toLowerCase().includes('<html')) {
+      const lowerHtml = design.customHtml.toLowerCase();
+      if (lowerHtml.includes('<!doctype') || lowerHtml.includes('<html')) {
         return design.customHtml;
       }
       // Si no tiene estructura, envolverlo en una estructura HTML básica
@@ -489,6 +452,13 @@ export class CampaignWizardComponent implements OnInit {
 </html>`;
     }
     
+    // Si hay editorContent, intentar generar HTML desde ahí
+    if (design.editorContent) {
+      console.log('Using editorContent for preview');
+      // Aquí se podría implementar la generación de HTML desde el contenido del editor
+    }
+    
+    // Fallback: generar desde content
     return this.generateHtmlFromDesign(design);
   }
 

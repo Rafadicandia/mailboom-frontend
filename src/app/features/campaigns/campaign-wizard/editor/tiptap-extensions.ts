@@ -1,4 +1,5 @@
 import { Node, mergeAttributes } from '@tiptap/core';
+import { NodeSelection } from '@tiptap/pm/state';
 
 // URLs de iconos de redes sociales
 const SOCIAL_ICON_URLS: Record<string, string> = {
@@ -283,6 +284,35 @@ export const HeaderNode = Node.create({
     return [{ tag: 'div[data-type="header-node"]' }];
   },
   
+  addNodeView() {
+    return ({ node, HTMLAttributes }: any) => {
+      const attrs = node.attrs as Record<string, any>;
+      const dom = document.createElement('div');
+      dom.setAttribute('data-type', 'header-node');
+      dom.style.cssText = `text-align: ${attrs['align']}; padding: ${attrs['padding']}; background-color: ${attrs['backgroundColor']}; min-height: 60px; display: flex; align-items: center; justify-content: center; cursor: pointer;`;
+      
+      // Aplicar atributos de TipTap
+      Object.entries(mergeAttributes(HTMLAttributes, {})).forEach(([key, value]) => {
+        if (key !== 'style' && key !== 'data-type' && typeof value === 'string') {
+          dom.setAttribute(key, value);
+        }
+      });
+      
+      let content = '';
+      if (attrs['useImage'] && attrs['logoUrl']) {
+        content = `<img src="${attrs['logoUrl']}" style="max-width: ${attrs['logoWidth']}; height: auto;" alt="Logo" />`;
+      } else if (attrs['text']) {
+        content = `<span style="font-size: 24px; font-weight: bold; color: ${attrs['textColor']};">${attrs['text']}</span>`;
+      } else {
+        content = `<span style="font-size: 16px; color: #9ca3af; font-style: italic;">✚ Haz clic para configurar el header</span>`;
+      }
+      
+      dom.innerHTML = content;
+      
+      return { dom };
+    };
+  },
+
   renderHTML({ node, HTMLAttributes }) {
     const attrs = node.attrs as Record<string, any>;
     let content = '';
@@ -291,15 +321,17 @@ export const HeaderNode = Node.create({
       content = `<img src="${attrs['logoUrl']}" style="max-width: ${attrs['logoWidth']}; height: auto;" alt="Logo" />`;
     } else if (attrs['text']) {
       content = `<span style="font-size: 24px; font-weight: bold; color: ${attrs['textColor']};">${attrs['text']}</span>`;
+    } else {
+      content = `<span style="font-size: 16px; color: #9ca3af; font-style: italic;">✚ Haz clic para configurar el header</span>`;
     }
     
     return [
       'div',
       mergeAttributes(HTMLAttributes, {
         'data-type': 'header-node',
-        style: `text-align: ${attrs['align']}; padding: ${attrs['padding']}; background-color: ${attrs['backgroundColor']};`
+        style: `text-align: ${attrs['align']}; padding: ${attrs['padding']}; background-color: ${attrs['backgroundColor']}; min-height: 60px; display: flex; align-items: center; justify-content: center;`
       }),
-      ['div', { innerHTML: content }]
+      content
     ];
   }
 });
@@ -331,6 +363,53 @@ export const FooterNode = Node.create({
     return [{ tag: 'div[data-type="footer-node"]' }];
   },
   
+  addNodeView() {
+    return ({ node, HTMLAttributes }: any) => {
+      const attrs = node.attrs as Record<string, any>;
+      const dom = document.createElement('div');
+      dom.setAttribute('data-type', 'footer-node');
+      dom.style.cssText = `text-align: ${attrs['align']}; padding: ${attrs['padding']}; background-color: ${attrs['backgroundColor']}; color: ${attrs['textColor']}; border-top: 1px solid #e5e7eb; cursor: pointer;`;
+      
+      const content: string[] = [];
+      
+      if (attrs['companyName']) {
+        content.push(`<p style="font-weight: bold; margin: 0 0 8px 0;">${attrs['companyName']}</p>`);
+      }
+      
+      if (attrs['address']) {
+        content.push(`<p style="font-size: 12px; margin: 0 0 4px 0;">${attrs['address']}</p>`);
+      }
+      
+      // Only show email if it contains '@' to avoid showing invalid values like 'email'
+      const hasValidEmail = attrs['email'] && attrs['email'].includes('@');
+      if (attrs['phone'] || hasValidEmail) {
+        const phone = attrs['phone'] || '';
+        const email = hasValidEmail ? attrs['email'] : '';
+        const contact = [phone, email].filter(Boolean).join(' | ');
+        content.push(`<p style="font-size: 12px; margin: 0 0 4px 0;">${contact}</p>`);
+      }
+      
+      if (attrs['website']) {
+        content.push(`<p style="font-size: 12px; margin: 0 0 8px 0;"><a href="${attrs['website']}" style="color: ${attrs['textColor']};">${attrs['website']}</a></p>`);
+      }
+      
+      if (attrs['showUnsubscribe']) {
+        content.push(`<p style="font-size: 12px; margin: 16px 0 0 0;"><a href="{{unsubscribe_link}}" style="color: ${attrs['textColor']};">Darse de baja</a></p>`);
+      }
+      
+      content.push(`<p style="font-size: 11px; margin: 16px 0 0 0; opacity: 0.7;">Enviado con <strong>MailBoom</strong></p>`);
+      
+      if (content.length === 1) {
+        // Solo tiene el "Enviado con MailBoom", mostrar placeholder
+        content.unshift(`<p style="font-size: 14px; color: #9ca3af; font-style: italic; margin: 0 0 8px 0;">✚ Haz clic para configurar el footer</p>`);
+      }
+      
+      dom.innerHTML = content.join('');
+      
+      return { dom };
+    };
+  },
+
   renderHTML({ node, HTMLAttributes }) {
     const attrs = node.attrs as Record<string, any>;
     const content: string[] = [];
@@ -358,13 +437,17 @@ export const FooterNode = Node.create({
     
     content.push(`<p style="font-size: 11px; margin: 16px 0 0 0; opacity: 0.7;">Enviado con <strong>MailBoom</strong></p>`);
     
+    if (content.length === 1) {
+      content.unshift(`<p style="font-size: 14px; color: #9ca3af; font-style: italic; margin: 0 0 8px 0;">✚ Haz clic para configurar el footer</p>`);
+    }
+    
     return [
       'div',
       mergeAttributes(HTMLAttributes, {
         'data-type': 'footer-node',
         style: `text-align: ${attrs['align']}; padding: ${attrs['padding']}; background-color: ${attrs['backgroundColor']}; color: ${attrs['textColor']}; border-top: 1px solid #e5e7eb;`
       }),
-      ['div', { innerHTML: content.join('') }]
+      content.join('')
     ];
   }
 });
