@@ -12,218 +12,216 @@ import { ContactList } from '../../../core/models/contact.model';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <div class="space-y-6">
-      <!-- Header -->
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900">Panel de Administración</h1>
-          <p class="text-gray-600">Gestiona usuarios, campañas y contactos de la plataforma</p>
+    <div class="max-w-5xl mx-auto py-8 px-6">
+      <!-- Header estilo Notion limpio -->
+      <div class="mb-10">
+        <div class="flex items-center gap-3 mb-1">
+          <h1 class="text-3xl font-semibold" style="color: #37352F;">Panel de Administración</h1>
         </div>
-        <div class="flex items-center gap-2">
-          <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
-            Administrador
-          </span>
-        </div>
+        <p class="text-base" style="color: #787774;">Gestiona usuarios, campañas y contactos de la plataforma</p>
       </div>
 
-      <!-- Stats Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-gray-600">Usuarios Totales</p>
-              <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats().totalUsers }}</p>
-            </div>
-            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <!-- Stats Grid estilo Notion sin bordes -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
+        <div class="group cursor-default">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background-color: #F7F6F3;">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #787774;">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             </div>
+            <span class="text-sm" style="color: #787774;">Usuarios</span>
           </div>
+          <p class="text-2xl font-semibold" style="color: #37352F;">{{ stats().totalUsers }}</p>
         </div>
 
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-gray-600">Campañas Totales</p>
-              <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats().totalCampaigns }}</p>
-            </div>
-            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="group cursor-default">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background-color: #F7F6F3;">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #787774;">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             </div>
+            <span class="text-sm" style="color: #787774;">Campañas</span>
           </div>
+          <p class="text-2xl font-semibold" style="color: #37352F;">{{ stats().totalCampaigns }}</p>
         </div>
 
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-gray-600">Listas de Contactos</p>
-              <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats().totalContactLists }}</p>
-            </div>
-            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="group cursor-default">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background-color: #F7F6F3;">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #787774;">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </div>
+            <span class="text-sm" style="color: #787774;">Listas</span>
           </div>
+          <p class="text-2xl font-semibold" style="color: #37352F;">{{ stats().totalContactLists }}</p>
         </div>
 
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-gray-600">Contactos</p>
-              <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats().totalContacts }}</p>
-            </div>
-            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-              <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="group cursor-default">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background-color: #F7F6F3;">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #787774;">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
               </svg>
             </div>
+            <span class="text-sm" style="color: #787774;">Contactos</span>
           </div>
+          <p class="text-2xl font-semibold" style="color: #37352F;">{{ stats().totalContacts }}</p>
         </div>
       </div>
 
-      <!-- Métricas de Email -->
+      <!-- Métricas de Email - Últimas 24 horas -->
       @if (metrics()) {
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Métricas de Email</h3>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="p-4 bg-green-50 rounded-lg">
-              <p class="text-sm font-medium text-green-600">Entregados</p>
-              <p class="text-2xl font-bold text-green-900 mt-1">{{ metrics()?.totalDelivered | number }}</p>
+        <div class="mb-10">
+          <h2 class="text-lg font-medium mb-4" style="color: #37352F;">Métricas de Email (últimas 24 horas)</h2>
+          
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <!-- Entregados -->
+            <div class="group cursor-default">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background-color: rgba(15, 123, 108, 0.15);">
+                  <svg class="w-4 h-4" fill="none" stroke="#0F7B6C" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span class="text-sm" style="color: #787774;">Entregados</span>
+              </div>
+              <p class="text-2xl font-semibold" style="color: #0F7B6C;">{{ metrics()!.totalDelivered | number }}</p>
             </div>
-            <div class="p-4 bg-red-50 rounded-lg">
-              <p class="text-sm font-medium text-red-600">Rebotados</p>
-              <p class="text-2xl font-bold text-red-900 mt-1">{{ metrics()?.totalBounces | number }}</p>
+
+            <!-- Rebotados -->
+            <div class="group cursor-default">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background-color: rgba(224, 62, 62, 0.15);">
+                  <svg class="w-4 h-4" fill="none" stroke="#E03E3E" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+                <span class="text-sm" style="color: #787774;">Rebotados</span>
+              </div>
+              <p class="text-2xl font-semibold" style="color: #E03E3E;">{{ metrics()!.totalBounces | number }}</p>
             </div>
-            <div class="p-4 bg-yellow-50 rounded-lg">
-              <p class="text-sm font-medium text-yellow-600">Quejas</p>
-              <p class="text-2xl font-bold text-yellow-900 mt-1">{{ metrics()?.totalComplaints | number }}</p>
+
+            <!-- Quejas -->
+            <div class="group cursor-default">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background-color: rgba(223, 171, 1, 0.15);">
+                  <svg class="w-4 h-4" fill="none" stroke="#DFAB01" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <span class="text-sm" style="color: #787774;">Quejas</span>
+              </div>
+              <p class="text-2xl font-semibold" style="color: #DFAB01;">{{ metrics()!.totalComplaints | number }}</p>
             </div>
-            <div class="p-4 bg-gray-50 rounded-lg">
-              <p class="text-sm font-medium text-gray-600">Rechazados</p>
-              <p class="text-2xl font-bold text-gray-900 mt-1">{{ metrics()?.totalRejects | number }}</p>
+
+            <!-- Rechazados -->
+            <div class="group cursor-default">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background-color: rgba(155, 154, 151, 0.15);">
+                  <svg class="w-4 h-4" fill="none" stroke="#9B9A97" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                  </svg>
+                </div>
+                <span class="text-sm" style="color: #787774;">Rechazados</span>
+              </div>
+              <p class="text-2xl font-semibold" style="color: #9B9A97;">{{ metrics()!.totalRejects | number }}</p>
             </div>
           </div>
         </div>
       }
 
-      <!-- Tabs -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-        <div class="border-b border-gray-200">
-          <nav class="flex space-x-8 px-6" aria-label="Tabs">
-            <button 
-              (click)="activeTab.set('users')"
-              class="py-4 px-1 border-b-2 font-medium text-sm transition-colors"
-              [class.border-indigo-600]="activeTab() === 'users'"
-              [class.text-indigo-600]="activeTab() === 'users'"
-              [class.border-transparent]="activeTab() !== 'users'"
-              [class.text-gray-500]="activeTab() !== 'users'">
-              Usuarios
-            </button>
-            <button 
-              (click)="activeTab.set('campaigns')"
-              class="py-4 px-1 border-b-2 font-medium text-sm transition-colors"
-              [class.border-indigo-600]="activeTab() === 'campaigns'"
-              [class.text-indigo-600]="activeTab() === 'campaigns'"
-              [class.border-transparent]="activeTab() !== 'campaigns'"
-              [class.text-gray-500]="activeTab() !== 'campaigns'">
-              Campañas
-            </button>
-            <button 
-              (click)="activeTab.set('lists')"
-              class="py-4 px-1 border-b-2 font-medium text-sm transition-colors"
-              [class.border-indigo-600]="activeTab() === 'lists'"
-              [class.text-indigo-600]="activeTab() === 'lists'"
-              [class.border-transparent]="activeTab() !== 'lists'"
-              [class.text-gray-500]="activeTab() !== 'lists'">
-              Listas de Contactos
-            </button>
-          </nav>
+      <!-- Tabs estilo Notion sin líneas -->
+      <div class="mb-6">
+        <div class="flex gap-6 mb-6">
+          <button 
+            (click)="activeTab.set('users')"
+            class="text-sm font-medium transition-colors pb-1"
+            [style.color]="activeTab() === 'users' ? '#37352F' : '#787774'"
+            [style.border-bottom]="activeTab() === 'users' ? '2px solid #37352F' : '2px solid transparent'">
+            Usuarios
+          </button>
+          <button 
+            (click)="activeTab.set('campaigns')"
+            class="text-sm font-medium transition-colors pb-1"
+            [style.color]="activeTab() === 'campaigns' ? '#37352F' : '#787774'"
+            [style.border-bottom]="activeTab() === 'campaigns' ? '2px solid #37352F' : '2px solid transparent'">
+            Campañas
+          </button>
+          <button 
+            (click)="activeTab.set('lists')"
+            class="text-sm font-medium transition-colors pb-1"
+            [style.color]="activeTab() === 'lists' ? '#37352F' : '#787774'"
+            [style.border-bottom]="activeTab() === 'lists' ? '2px solid #37352F' : '2px solid transparent'">
+            Listas de Contactos
+          </button>
         </div>
 
         <!-- Users Tab -->
         @if (activeTab() === 'users') {
-          <div class="p-6">
+          <div>
             <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-semibold text-gray-900">Gestión de Usuarios</h3>
-              <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm">
+              <h3 class="text-base font-medium" style="color: #37352F;">Gestión de Usuarios</h3>
+              <button (click)="loadUsers()" class="text-sm hover:underline" style="color: #787774;">
                 Actualizar
               </button>
             </div>
             
             @if (loading()) {
               <div class="flex justify-center py-8">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <div class="animate-spin rounded-full h-5 w-5" style="border: 2px solid #E9E9E7; border-top-color: #37352F;"></div>
               </div>
             } @else {
-              <div class="overflow-x-auto">
-                <table class="w-full">
-                  <thead>
-                    <tr class="border-b border-gray-200">
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Nombre</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Email</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Plan</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Emails Enviados</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Rol</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (user of users(); track user.id) {
-                      <tr class="border-b border-gray-100 hover:bg-gray-50 cursor-pointer" (click)="viewUser(user.id)">
-                        <td class="py-3 px-4 text-sm text-gray-900">{{ user.name }}</td>
-                        <td class="py-3 px-4 text-sm text-gray-600">{{ user.email }}</td>
-                        <td class="py-3 px-4 text-sm">
-                          <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
-                            {{ user.plan }}
-                          </span>
-                        </td>
-                        <td class="py-3 px-4 text-sm text-gray-600">{{ user.emailsSent }}</td>
-                        <td class="py-3 px-4 text-sm">
-                          <span class="px-2 py-1 rounded text-xs font-medium"
-                                [class.bg-purple-100]="user.role === 'ADMIN'"
-                                [class.text-purple-800]="user.role === 'ADMIN'"
-                                [class.bg-gray-100]="user.role === 'USER'"
-                                [class.text-gray-800]="user.role === 'USER'">
-                            {{ user.role }}
-                          </span>
-                        </td>
-                        <td class="py-3 px-4" (click)="$event.stopPropagation()">
-                          <button (click)="viewUser(user.id)" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium mr-3">
-                            Editar
-                          </button>
-                          <button 
-                            (click)="deleteUser(user.id)"
-                            class="text-red-600 hover:text-red-800 text-sm font-medium">
-                            Eliminar
-                          </button>
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
+              <div class="space-y-1">
+                @for (user of users(); track user.id) {
+                  <div 
+                    class="flex items-center justify-between py-3 px-2 rounded-lg cursor-pointer transition-colors hover:bg-[#F7F6F3]"
+                    (click)="viewUser(user.id)">
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                      <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium text-white" style="background-color: #9065B0;">
+                        {{ getInitials(user.name) }}
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium truncate" style="color: #37352F;">{{ user.name }}</p>
+                        <p class="text-xs truncate" style="color: #9B9A97;">{{ user.email }}</p>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                      <span class="text-xs px-2 py-0.5 rounded" style="background-color: #F7F6F3; color: #787774;">
+                        {{ user.plan }}
+                      </span>
+                      <span class="text-xs px-2 py-0.5 rounded"
+                            [style.background-color]="user.role === 'ADMIN' ? 'rgba(144, 101, 176, 0.15)' : '#F7F6F3'"
+                            [style.color]="user.role === 'ADMIN' ? '#9065B0' : '#787774'">
+                        {{ user.role }}
+                      </span>
+                      <span class="text-xs" style="color: #9B9A97;">{{ user.emailsSent }} emails</span>
+                    </div>
+                  </div>
+                }
               </div>
 
-              <!-- Pagination -->
+              <!-- Pagination estilo Notion limpio -->
               @if (usersTotalPages() > 1) {
-                <div class="flex justify-center items-center gap-2 mt-4">
+                <div class="flex justify-center items-center gap-3 mt-6 text-sm">
                   <button 
                     (click)="changeUsersPage(usersCurrentPage() - 1)" 
                     [disabled]="usersCurrentPage() === 0"
-                    class="px-3 py-1 rounded bg-gray-100 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                    Anterior
+                    class="px-2 py-1 rounded disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F7F6F3]"
+                    style="color: #787774;">
+                    ←
                   </button>
-                  <span class="text-sm text-gray-600">
-                    Página {{ usersCurrentPage() + 1 }} de {{ usersTotalPages() }}
+                  <span style="color: #9B9A97;">
+                    {{ usersCurrentPage() + 1 }} / {{ usersTotalPages() }}
                   </span>
                   <button 
                     (click)="changeUsersPage(usersCurrentPage() + 1)" 
                     [disabled]="usersCurrentPage() >= usersTotalPages() - 1"
-                    class="px-3 py-1 rounded bg-gray-100 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                    Siguiente
+                    class="px-2 py-1 rounded disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F7F6F3]"
+                    style="color: #787774;">
+                    →
                   </button>
                 </div>
               }
@@ -233,81 +231,63 @@ import { ContactList } from '../../../core/models/contact.model';
 
         <!-- Campaigns Tab -->
         @if (activeTab() === 'campaigns') {
-          <div class="p-6">
+          <div>
             <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-semibold text-gray-900">Todas las Campañas</h3>
-              <button (click)="loadCampaigns()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm">
+              <h3 class="text-base font-medium" style="color: #37352F;">Todas las Campañas</h3>
+              <button (click)="loadCampaigns()" class="text-sm hover:underline" style="color: #787774;">
                 Actualizar
               </button>
             </div>
             
             @if (loading()) {
               <div class="flex justify-center py-8">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <div class="animate-spin rounded-full h-5 w-5" style="border: 2px solid #E9E9E7; border-top-color: #37352F;"></div>
               </div>
             } @else {
-              <div class="overflow-x-auto">
-                <table class="w-full">
-                  <thead>
-                    <tr class="border-b border-gray-200">
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Asunto</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Propietario</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Remitente</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Estado</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Fecha</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (campaign of campaigns(); track campaign.id) {
-                      <tr class="border-b border-gray-100 hover:bg-gray-50">
-                        <td class="py-3 px-4 text-sm text-gray-900">{{ campaign.subject }}</td>
-                        <td class="py-3 px-4 text-sm text-gray-600">{{ getUserName(campaign.ownerId) }}</td>
-                        <td class="py-3 px-4 text-sm text-gray-600">{{ campaign.sender || 'N/A' }}</td>
-                        <td class="py-3 px-4 text-sm">
-                          <span class="px-2 py-1 rounded text-xs font-medium"
-                                [class.bg-green-100]="campaign.status === 'SENT'"
-                                [class.text-green-800]="campaign.status === 'SENT'"
-                                [class.bg-yellow-100]="campaign.status === 'DRAFT'"
-                                [class.text-yellow-800]="campaign.status === 'DRAFT'"
-                                [class.bg-blue-100]="campaign.status === 'SENDING'"
-                                [class.text-blue-800]="campaign.status === 'SENDING'">
-                            {{ getStatusText(campaign.status) }}
-                          </span>
-                        </td>
-                        <td class="py-3 px-4 text-sm text-gray-600">
-                          {{ campaign.createdAt | date:'dd/MM/yyyy HH:mm' }}
-                        </td>
-                        <td class="py-3 px-4">
-                          <button 
-                            (click)="deleteCampaign(campaign.id)"
-                            class="text-red-600 hover:text-red-800 text-sm font-medium">
-                            Eliminar
-                          </button>
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
+              <div class="space-y-1">
+                @for (campaign of campaigns(); track campaign.id) {
+                  <div class="flex items-center justify-between py-3 px-2 rounded-lg transition-colors hover:bg-[#F7F6F3]">
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium truncate" style="color: #37352F;">{{ campaign.subject }}</p>
+                      <p class="text-xs" style="color: #9B9A97;">{{ getUserName(campaign.ownerId) }} · {{ campaign.sender || 'Sin remitente' }}</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                      <span class="text-xs px-2 py-0.5 rounded"
+                            [style.background-color]="campaign.status === 'SENT' ? 'rgba(15, 123, 108, 0.15)' : campaign.status === 'DRAFT' ? 'rgba(223, 171, 1, 0.15)' : campaign.status === 'SENDING' ? 'rgba(82, 156, 202, 0.15)' : '#F7F6F3'"
+                            [style.color]="campaign.status === 'SENT' ? '#0F7B6C' : campaign.status === 'DRAFT' ? '#DFAB01' : campaign.status === 'SENDING' ? '#529CCA' : '#787774'">
+                        {{ getStatusText(campaign.status) }}
+                      </span>
+                      <span class="text-xs" style="color: #9B9A97;">{{ campaign.createdAt | date:'dd/MM/yyyy' }}</span>
+                      <button 
+                        (click)="deleteCampaign(campaign.id)"
+                        class="text-xs hover:underline"
+                        style="color: #E03E3E;">
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+                }
               </div>
 
               <!-- Pagination -->
               @if (campaignsTotalPages() > 1) {
-                <div class="flex justify-center items-center gap-2 mt-4">
+                <div class="flex justify-center items-center gap-3 mt-6 text-sm">
                   <button 
                     (click)="changeCampaignsPage(campaignsCurrentPage() - 1)" 
                     [disabled]="campaignsCurrentPage() === 0"
-                    class="px-3 py-1 rounded bg-gray-100 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                    Anterior
+                    class="px-2 py-1 rounded disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F7F6F3]"
+                    style="color: #787774;">
+                    ←
                   </button>
-                  <span class="text-sm text-gray-600">
-                    Página {{ campaignsCurrentPage() + 1 }} de {{ campaignsTotalPages() }}
+                  <span style="color: #9B9A97;">
+                    {{ campaignsCurrentPage() + 1 }} / {{ campaignsTotalPages() }}
                   </span>
                   <button 
                     (click)="changeCampaignsPage(campaignsCurrentPage() + 1)" 
                     [disabled]="campaignsCurrentPage() >= campaignsTotalPages() - 1"
-                    class="px-3 py-1 rounded bg-gray-100 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                    Siguiente
+                    class="px-2 py-1 rounded disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F7F6F3]"
+                    style="color: #787774;">
+                    →
                   </button>
                 </div>
               }
@@ -317,68 +297,68 @@ import { ContactList } from '../../../core/models/contact.model';
 
         <!-- Contact Lists Tab -->
         @if (activeTab() === 'lists') {
-          <div class="p-6">
+          <div>
             <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-semibold text-gray-900">Listas de Contactos</h3>
-              <button (click)="loadContactLists()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm">
+              <h3 class="text-base font-medium" style="color: #37352F;">Listas de Contactos</h3>
+              <button (click)="loadContactLists()" class="text-sm hover:underline" style="color: #787774;">
                 Actualizar
               </button>
             </div>
             
             @if (loading()) {
               <div class="flex justify-center py-8">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <div class="animate-spin rounded-full h-5 w-5" style="border: 2px solid #E9E9E7; border-top-color: #37352F;"></div>
               </div>
             } @else {
-              <div class="overflow-x-auto">
-                <table class="w-full">
-                  <thead>
-                    <tr class="border-b border-gray-200">
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Nombre</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Propietario</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Total Contactos</th>
-                      <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (list of contactLists(); track list.id) {
-                      <tr class="border-b border-gray-100 hover:bg-gray-50">
-                        <td class="py-3 px-4 text-sm text-gray-900">{{ list.name }}</td>
-                        <td class="py-3 px-4 text-sm text-gray-600">{{ getUserName(list.ownerId) }}</td>
-                        <td class="py-3 px-4 text-sm text-gray-600">{{ getContactsCount(list.id) }}</td>
-                        <td class="py-3 px-4">
-                          <button (click)="viewContacts(list.id)" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium mr-3">
-                            Ver
-                          </button>
-                          <button 
-                            (click)="deleteContactList(list.id)"
-                            class="text-red-600 hover:text-red-800 text-sm font-medium">
-                            Eliminar
-                          </button>
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
+              <div class="space-y-1">
+                @for (list of contactLists(); track list.id) {
+                  <div class="flex items-center justify-between py-3 px-2 rounded-lg transition-colors hover:bg-[#F7F6F3]">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: #F7F6F3;">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #787774;">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p class="text-sm font-medium" style="color: #37352F;">{{ list.name }}</p>
+                        <p class="text-xs" style="color: #9B9A97;">{{ getUserName(list.ownerId) }}</p>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                      <span class="text-xs" style="color: #9B9A97;">{{ getContactsCount(list.id) }} contactos</span>
+                      <button (click)="viewContacts(list.id)" class="text-xs hover:underline" style="color: #529CCA;">
+                        Ver
+                      </button>
+                      <button 
+                        (click)="deleteContactList(list.id)"
+                        class="text-xs hover:underline"
+                        style="color: #E03E3E;">
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+                }
               </div>
 
               <!-- Pagination -->
               @if (listsTotalPages() > 1) {
-                <div class="flex justify-center items-center gap-2 mt-4">
+                <div class="flex justify-center items-center gap-3 mt-6 text-sm">
                   <button 
                     (click)="changeListsPage(listsCurrentPage() - 1)" 
                     [disabled]="listsCurrentPage() === 0"
-                    class="px-3 py-1 rounded bg-gray-100 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                    Anterior
+                    class="px-2 py-1 rounded disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F7F6F3]"
+                    style="color: #787774;">
+                    ←
                   </button>
-                  <span class="text-sm text-gray-600">
-                    Página {{ listsCurrentPage() + 1 }} de {{ listsTotalPages() }}
+                  <span style="color: #9B9A97;">
+                    {{ listsCurrentPage() + 1 }} / {{ listsTotalPages() }}
                   </span>
                   <button 
                     (click)="changeListsPage(listsCurrentPage() + 1)" 
                     [disabled]="listsCurrentPage() >= listsTotalPages() - 1"
-                    class="px-3 py-1 rounded bg-gray-100 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                    Siguiente
+                    class="px-2 py-1 rounded disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F7F6F3]"
+                    style="color: #787774;">
+                    →
                   </button>
                 </div>
               }
@@ -423,6 +403,15 @@ export class AdminDashboardComponent implements OnInit {
 
   getContactsCount(listId: string): number {
     return this.contactsCountMap.get(listId) || 0;
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '?';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
   }
 
   ngOnInit() {

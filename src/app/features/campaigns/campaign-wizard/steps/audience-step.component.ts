@@ -12,30 +12,36 @@ import { ContactList, Contact } from '../../../../core/models/contact.model';
   template: `
     <div class="space-y-6">
       <div>
-        <h3 class="text-lg font-semibold text-gray-900 mb-1">Seleccionar Audiencia</h3>
-        <p class="text-sm text-gray-600">Elige la lista de destinatarios para tu campaña</p>
+        <h3 class="text-base font-semibold text-notion-text mb-1">Seleccionar Audiencia</h3>
+        <p class="text-sm text-notion-text-secondary">Elige la lista de destinatarios para tu campaña</p>
       </div>
 
       <!-- Lista de audiencias existentes -->
       @if (contactService.contactLists().length > 0) {
-        <div class="space-y-3">
-          <label class="block text-sm font-medium text-gray-700">Tus listas de contactos</label>
+        <div class="space-y-1">
+          <label class="block text-sm font-medium text-notion-text mb-3">Tus listas de contactos</label>
           @for (list of contactService.contactLists(); track list.id) {
-            <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-indigo-50 hover:border-indigo-300 transition-colors"
-                   [class.bg-indigo-50]="selectedListId() === list.id"
-                   [class.border-indigo-500]="selectedListId() === list.id">
-              <input type="radio" 
-                     name="audience" 
-                     [value]="list.id" 
-                     [(ngModel)]="selectedListIdVal"
-                     (ngModelChange)="onSelectList($event)"
-                     class="w-4 h-4 text-indigo-600">
-              <div class="ml-3 flex-1">
-                <p class="font-medium text-gray-900">{{ list.name }}</p>
-                <p class="text-sm text-gray-500">{{ getContactCount(list) }} contactos</p>
+            <label class="flex items-center justify-between py-3 px-2 rounded-notion cursor-pointer transition-colors hover:bg-notion-bg-hover"
+                   [class.bg-notion-bg-hover]="selectedListId() === list.id">
+              <div class="flex items-center gap-3 flex-1 min-w-0">
+                <input type="radio" 
+                       name="audience" 
+                       [value]="list.id" 
+                       [(ngModel)]="selectedListIdVal"
+                       (ngModelChange)="onSelectList($event)"
+                       class="w-4 h-4 text-notion-text">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgba(144, 101, 176, 0.15);">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #9065B0;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium truncate text-notion-text">{{ list.name }}</p>
+                  <p class="text-xs text-notion-text-tertiary">{{ getContactCount(list) }} contactos</p>
+                </div>
               </div>
               @if (getContactCount(list) === 0) {
-                <span class="text-xs text-yellow-600 bg-yellow-100 px-2 py-1 rounded">Vacía</span>
+                <span class="text-xs text-notion-orange px-2 py-1 rounded" style="background-color: rgba(203, 137, 7, 0.15);">Vacía</span>
               }
             </label>
           }
@@ -43,9 +49,9 @@ import { ContactList, Contact } from '../../../../core/models/contact.model';
       }
 
       <!-- Crear nueva lista -->
-      <div class="border-t pt-6">
+      <div class="border-t border-notion-border pt-6">
         <button (click)="toggleCreateNew()" 
-                class="flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-medium">
+                class="flex items-center gap-2 text-notion-blue hover:text-notion-blue hover:underline font-medium text-sm">
           @if (!showCreateForm()) {
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
@@ -60,20 +66,20 @@ import { ContactList, Contact } from '../../../../core/models/contact.model';
         </button>
 
         @if (showCreateForm()) {
-          <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+          <div class="mt-4 p-4 bg-notion-bg-secondary rounded-notion border border-notion-border">
             <div class="space-y-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre de la lista</label>
+                <label class="block text-sm font-medium text-notion-text mb-1">Nombre de la lista</label>
                 <input type="text" 
                        [(ngModel)]="newListName"
-                       class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+                       class="w-full px-3 py-2 border border-notion-border rounded-notion focus:ring-2 focus:ring-notion-blue focus:border-notion-blue"
                        placeholder="Ej: Newsletter Febrero 2025">
               </div>
               
               <div class="flex gap-3">
                 <button (click)="createList()" 
                         [disabled]="!newListName.trim() || isCreating()"
-                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 flex items-center gap-2">
+                        class="px-4 py-2 bg-notion-text text-white rounded-notion hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium">
                   @if (isCreating()) {
                     <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -90,7 +96,7 @@ import { ContactList, Contact } from '../../../../core/models/contact.model';
               </div>
 
               @if (createError()) {
-                <p class="text-red-600 text-sm">{{ createError() }}</p>
+                <p class="text-notion-red text-sm">{{ createError() }}</p>
               }
             </div>
           </div>
@@ -99,10 +105,10 @@ import { ContactList, Contact } from '../../../../core/models/contact.model';
 
       <!-- Sin listas -->
       @if (contactService.contactLists().length === 0 && !contactService.loading()) {
-        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
-          <p class="text-yellow-800 mb-3">No tienes ninguna lista de contactos aún.</p>
+        <div class="bg-notion-yellow bg-opacity-10 border border-notion-yellow border-opacity-20 rounded-notion p-4 text-center">
+          <p class="text-notion-text mb-3">No tienes ninguna lista de contactos aún.</p>
           <button (click)="toggleCreateNew()" 
-                  class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
+                  class="px-4 py-2 bg-notion-text text-white rounded-notion hover:bg-opacity-90 text-sm font-medium">
             Crear tu primera lista
           </button>
         </div>
@@ -111,18 +117,18 @@ import { ContactList, Contact } from '../../../../core/models/contact.model';
       <!-- Cargando -->
       @if (contactService.loading()) {
         <div class="text-center py-8">
-          <svg class="w-8 h-8 animate-spin mx-auto text-indigo-600" fill="none" viewBox="0 0 24 24">
+          <svg class="w-8 h-8 animate-spin mx-auto text-notion-text-secondary" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <p class="mt-2 text-gray-600">Cargando tus listas...</p>
+          <p class="mt-2 text-notion-text-secondary">Cargando tus listas...</p>
         </div>
       }
 
       <!-- Información de la selección -->
       @if (selectedListId()) {
-        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-          <p class="text-green-800 flex items-center gap-2">
+        <div class="bg-notion-green bg-opacity-10 border border-notion-green border-opacity-20 rounded-notion p-4">
+          <p class="text-notion-text flex items-center gap-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
             </svg>
@@ -131,51 +137,43 @@ import { ContactList, Contact } from '../../../../core/models/contact.model';
         </div>
 
         <!-- Ver integrantes de la lista seleccionada -->
-        <div class="border-t pt-6">
+        <div class="border-t border-notion-border pt-6">
           <button (click)="toggleShowContacts()" 
-                  class="flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-medium">
+                  class="text-xs hover:underline text-notion-blue font-medium">
             @if (!showContacts()) {
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-              </svg>
-              Ver integrantes de la lista
+              Ver contactos
             } @else {
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-              Ocultar integrantes
+              Ocultar contactos
             }
           </button>
 
           @if (showContacts()) {
-            <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+            <div class="mt-4 p-4 rounded-lg" style="background-color: #F7F6F3;">
               @if (isLoadingContacts()) {
-                <div class="text-center py-4">
-                  <svg class="w-6 h-6 animate-spin mx-auto text-indigo-600" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <p class="mt-2 text-sm text-gray-600">Cargando contactos...</p>
+                <div class="flex justify-center py-8">
+                  <div class="animate-spin rounded-full h-5 w-5" style="border: 2px solid #E9E9E7; border-top-color: #37352F;"></div>
                 </div>
               } @else if (selectedListContacts().length === 0) {
-                <p class="text-gray-500 text-center py-4">No hay contactos en esta lista</p>
+                <p class="text-notion-text-tertiary text-center py-4 text-sm">No hay contactos en esta lista</p>
               } @else {
-                <div class="space-y-2 max-h-64 overflow-y-auto">
+                <div class="space-y-1 max-h-64 overflow-y-auto">
                   @for (contact of selectedListContacts(); track contact.id || contact.contactId) {
-                    <div class="flex items-center justify-between p-2 bg-white rounded border">
-                      <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-gray-900 truncate">
-                          {{ contact.name || 'Sin nombre' }}
-                        </p>
-                        <p class="text-xs text-gray-500 truncate">{{ contact.email }}</p>
+                    <div class="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-white transition-colors">
+                      <div class="flex items-center gap-3 flex-1 min-w-0">
+                        <div class="w-7 h-7 rounded-full flex items-center justify-center" style="background-color: rgba(144, 101, 176, 0.15);">
+                          <span class="text-xs font-medium" style="color: #9065B0;">{{ (contact.name || contact.email || '?')[0].toUpperCase() }}</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                          <p class="text-sm font-medium truncate text-notion-text">
+                            {{ contact.name || 'Sin nombre' }}
+                          </p>
+                          <p class="text-xs text-notion-text-tertiary truncate">{{ contact.email }}</p>
+                        </div>
                       </div>
                       @if (contact.subscribed !== undefined) {
-                        <span class="ml-2 text-xs px-2 py-1 rounded" 
-                              [class.bg-green-100]="contact.subscribed"
-                              [class.text-green-800]="contact.subscribed"
-                              [class.bg-red-100]="!contact.subscribed"
-                              [class.text-red-800]="!contact.subscribed">
+                        <span class="text-xs px-2 py-1 rounded" 
+                              [style.backgroundColor]="contact.subscribed ? 'rgba(77, 171, 154, 0.15)' : 'rgba(224, 62, 62, 0.15)'"
+                              [style.color]="contact.subscribed ? '#4DAB9A' : '#E03E3E'">
                           {{ contact.subscribed ? 'Activo' : 'Inactivo' }}
                         </span>
                       }
@@ -183,7 +181,7 @@ import { ContactList, Contact } from '../../../../core/models/contact.model';
                   }
                 </div>
                 @if (selectedListContacts().length > 0) {
-                  <p class="text-xs text-gray-500 mt-2 text-center">
+                  <p class="text-xs text-notion-text-tertiary mt-3 text-center">
                     Mostrando {{ selectedListContacts().length }} contacto(s)
                   </p>
                 }
@@ -196,12 +194,12 @@ import { ContactList, Contact } from '../../../../core/models/contact.model';
       <!-- Botones -->
       <div class="flex justify-between pt-4">
         <button type="button" (click)="onBack.emit()" 
-                class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+                class="px-5 py-2 border border-notion-border text-notion-text rounded-notion hover:bg-notion-bg-hover text-sm font-medium">
           ← Anterior
         </button>
         <button type="button" (click)="continue()" 
                 [disabled]="!selectedListId() || isCreating()"
-                class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300">
+                class="px-5 py-2 bg-notion-text text-white rounded-notion hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium">
           Siguiente: Revisión →
         </button>
       </div>
