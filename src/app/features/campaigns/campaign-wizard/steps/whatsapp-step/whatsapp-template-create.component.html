@@ -1,0 +1,198 @@
+<div class="template-create-overlay" *ngIf="isOpen()">
+  <div class="template-create-modal">
+    <!-- Header -->
+    <div class="modal-header">
+      <h3>Crear Nueva Plantilla</h3>
+      <p class="modal-subtitle">Crea una plantilla de WhatsApp para usar en tus campañas</p>
+      <button class="close-btn" (click)="close()" [disabled]="isSubmitting()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Success Message -->
+    @if (successMessage()) {
+      <div class="alert alert-success">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <span>{{ successMessage() }}</span>
+      </div>
+    }
+
+    <!-- Error Message -->
+    @if (errorMessage()) {
+      <div class="alert alert-error">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <!-- Form -->
+    <form [formGroup]="createForm" (ngSubmit)="openConfirmDialog()" *ngIf="!successMessage()">
+      <div class="form-grid">
+        <!-- Basic Info -->
+        <div class="form-section">
+          <h4>Información Básica</h4>
+          
+          <div class="form-group">
+            <label class="form-label">Nombre de la plantilla *</label>
+            <input 
+              type="text" 
+              formControlName="name"
+              class="form-input"
+              placeholder="ej: bienvenida_cliente_nuevo"
+              [class.is-invalid]="createForm.get('name')?.invalid && createForm.get('name')?.touched"
+            />
+            <small class="form-hint">Solo letras minúsculas, números y guiones bajos</small>
+            @if (createForm.get('name')?.hasError('pattern') && createForm.get('name')?.touched) {
+              <small class="form-error">El nombre solo puede contener letras minúsculas, números y guiones bajos</small>
+            }
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Idioma *</label>
+              <select formControlName="language" class="form-select">
+                @for (lang of availableLanguages; track lang.code) {
+                  <option [value]="lang.code">{{ lang.name }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Categoría *</label>
+              <select formControlName="category" class="form-select">
+                @for (cat of availableCategories; track cat.value) {
+                  <option [value]="cat.value">{{ cat.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Formato de parámetros</label>
+            <input 
+              type="text" 
+              formControlName="parameterFormat"
+              class="form-input"
+              placeholder="Ej: TEXT o MEDIA"
+            />
+          </div>
+        </div>
+
+        <!-- Components -->
+        <div class="form-section">
+          <div class="section-header">
+            <h4>Componentes de la Plantilla</h4>
+            <button 
+              type="button" 
+              class="btn btn-secondary btn-sm"
+              (click)="addComponent('HEADER')"
+              [disabled]="components.controls.length >= 5"
+            >
+              + Agregar Encabezado
+            </button>
+          </div>
+
+          @for (comp of components.controls; track $index; let i = $index) {
+            <div class="component-card" [class.is-body]="comp.get('type')?.value === 'BODY'">
+              <div class="component-header">
+                <span class="component-type">{{ getComponentTypeLabel(comp.get('type')?.value) }}</span>
+                @if (comp.get('type')?.value !== 'BODY') {
+                  <button 
+                    type="button" 
+                    class="btn-icon" 
+                    (click)="removeComponent(i)"
+                    title="Eliminar componente"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                }
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Contenido *</label>
+                <textarea 
+                  [formControlName]="i"
+                  formControlName="text"
+                  class="form-textarea"
+                  rows="3"
+                  [placeholder]="comp.get('type')?.value === 'BODY' ? 'Ej: Hola {{1}}, bienvenido...' : 'Contenido del ' + getComponentTypeLabel(comp.get('type')?.value)"
+                ></textarea>
+                @if (comp.get('type')?.value === 'BODY') {
+                  <small class="form-hint">
+                    Usa {{1}}, {{2}}, {{3}}... para parámetros dinámicos
+                  </small>
+                }
+              </div>
+            </div>
+          }
+
+          <div class="component-actions">
+            <button 
+              type="button" 
+              class="btn btn-outline"
+              (click)="addComponent('BODY')"
+              [disabled]="components.controls.length >= 5"
+            >
+              + Agregar Cuerpo
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-outline"
+              (click)="addComponent('FOOTER')"
+              [disabled]="components.controls.length >= 5"
+            >
+              + Agregar Pie
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-outline"
+              (click)="addComponent('BUTTON')"
+              [disabled]="components.controls.length >= 5"
+            >
+              + Agregar Botón
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="close()" [disabled]="isSubmitting()">
+          Cancelar
+        </button>
+        <button 
+          type="submit" 
+          class="btn btn-primary"
+          [disabled]="createForm.invalid || isSubmitting()"
+        >
+          @if (isSubmitting()) {
+            <span class="spinner"></span>
+          }
+          Enviar a Revisión
+        </button>
+      </div>
+    </form>
+
+    <!-- Confirm Dialog -->
+    <app-confirm-dialog
+      [dialogData]="confirmDialogData"
+      [isOpen]="isConfirmDialogOpen()"
+      (confirm)="onConfirmSend()"
+      (cancel)="onCancelSend()"
+      (dialogClose)="closeConfirmDialog()"
+    />
+  </div>
+</div>

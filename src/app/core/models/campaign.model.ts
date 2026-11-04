@@ -1,4 +1,5 @@
 export type CampaignStatus = 'DRAFT' | 'SENDING' | 'SENT' | 'CANCELLED';
+export type CampaignType = 'EMAIL' | 'WHATSAPP';
 
 export interface Campaign {
   id: string;
@@ -10,6 +11,7 @@ export interface Campaign {
   status: CampaignStatus;
   createdAt: string;
   sentAt?: string;
+  type?: CampaignType;
 }
 
 export interface NewCampaignRequest {
@@ -18,6 +20,7 @@ export interface NewCampaignRequest {
   htmlContent: string;
   sender: string;
   recipientListId: string;
+  type?: CampaignType;
 }
 
 export interface CampaignDataResponse {
@@ -29,6 +32,7 @@ export interface CampaignDataResponse {
   recipientListId: string;
   status: CampaignStatus;
   createdAt: string;
+  type?: CampaignType;
 }
 
 export interface SendCampaignRequest {

@@ -1,6 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Campaign, CampaignDataResponse, NewCampaignRequest, SendCampaignRequest } from '../models/campaign.model';
+import { WhatsAppCampaign, NewWhatsAppCampaignRequest, SendWhatsAppCampaignRequest } from '../models/whatsapp-campaign.model';
 
 @Injectable({ providedIn: 'root' })
 export class CampaignService {
@@ -92,5 +93,61 @@ export class CampaignService {
 
   removeCampaignFromList(campaignId: string) {
     this._campaigns.update(list => list.filter(c => c.id !== campaignId));
+  }
+
+  // ========== WHATSAPP CAMPAIGN OPERATIONS ==========
+
+  loadUserWhatsAppCampaigns(userId: string, page: number = 0, size: number = 10) {
+    this._loading.set(true);
+    console.log('📥 LOADING WHATSAPP CAMPAIGNS - userId:', userId, 'page:', page, 'size:', size);
+    this.http.get<any>(`${this.API_URL}/whatsapp/user/${userId}`, {
+      params: { page: page.toString(), size: size.toString() }
+    })
+      .subscribe({
+        next: (response) => {
+          console.log('📥 WHATSAPP CAMPAIGNS LOADED:', response);
+          const campaigns = response.content || response;
+          // Mezclar con campañas existentes o manejar por separado según necesidad
+          const existing = this._campaigns();
+          const whatsappCampaigns = campaigns.map((c: any) => ({
+            ...c,
+            type: 'WHATSAPP' as const
+          }));
+          this._campaigns.set([...existing.filter((c: Campaign) => c.type !== 'WHATSAPP'), ...whatsappCampaigns]);
+          this._currentPage.set(response.number || page);
+          this._pageSize.set(response.size || size);
+          this._totalElements.set(response.totalElements || campaigns.length);
+          this._totalPages.set(response.totalPages || 1);
+          this._loading.set(false);
+        },
+        error: (err) => {
+          console.error('📥 ERROR LOADING WHATSAPP CAMPAIGNS:', err);
+          this._loading.set(false);
+        }
+      });
+  }
+
+  createWhatsAppCampaign(request: NewWhatsAppCampaignRequest) {
+    console.log('💾 CREATE WHATSAPP CAMPAIGN - Request:', JSON.stringify(request, null, 2));
+    return this.http.post<WhatsAppCampaign>(`${this.API_URL}/whatsapp/new`, request);
+  }
+
+  updateWhatsAppCampaign(id: string, request: NewWhatsAppCampaignRequest) {
+    console.log('💾 UPDATE WHATSAPP CAMPAIGN - id:', id, ', Request:', JSON.stringify(request, null, 2));
+    return this.http.put<WhatsAppCampaign>(`${this.API_URL}/whatsapp/${id}/update`, request);
+  }
+
+  deleteWhatsAppCampaign(id: string) {
+    return this.http.delete(`${this.API_URL}/whatsapp/${id}/delete`);
+  }
+
+  sendWhatsAppCampaign(campaignId: string, ownerId: string) {
+    const request: SendWhatsAppCampaignRequest = { campaignId, ownerId };
+    console.log('🚀 SEND WHATSAPP CAMPAIGN - Request:', JSON.stringify(request, null, 2));
+    return this.http.post<void>(`${this.API_URL}/whatsapp/${campaignId}/send`, request);
+  }
+
+  getWhatsAppCampaign(id: string) {
+    return this.http.get<WhatsAppCampaign>(`${this.API_URL}/whatsapp/${id}`);
   }
 }

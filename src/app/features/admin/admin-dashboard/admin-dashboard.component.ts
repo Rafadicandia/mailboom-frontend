@@ -6,6 +6,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { User } from '../../../core/models/auth.model';
 import { Campaign } from '../../../core/models/campaign.model';
 import { ContactList } from '../../../core/models/contact.model';
+import { WhatsAppCampaign } from '../../../core/models/whatsapp-campaign.model';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -104,34 +105,80 @@ import { ContactList } from '../../../core/models/contact.model';
               <p class="text-2xl font-semibold" style="color: #E03E3E;">{{ metrics()!.totalBounces | number }}</p>
             </div>
 
-            <!-- Quejas -->
-            <div class="group cursor-default">
-              <div class="flex items-center gap-3 mb-2">
-                <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background-color: rgba(223, 171, 1, 0.15);">
-                  <svg class="w-4 h-4" fill="none" stroke="#DFAB01" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
+              <!-- Quejas -->
+              <div class="group cursor-default">
+                <div class="flex items-center gap-3 mb-2">
+                  <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background-color: rgba(223, 171, 1, 0.15);">
+                    <svg class="w-4 h-4" fill="none" stroke="#DFAB01" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <span class="text-sm" style="color: #787774;">Quejas</span>
                 </div>
-                <span class="text-sm" style="color: #787774;">Quejas</span>
+                <p class="text-2xl font-semibold" style="color: #DFAB01;">{{ metrics()!.totalComplaints | number }}</p>
               </div>
-              <p class="text-2xl font-semibold" style="color: #DFAB01;">{{ metrics()!.totalComplaints | number }}</p>
-            </div>
-
-            <!-- Rechazados -->
-            <div class="group cursor-default">
-              <div class="flex items-center gap-3 mb-2">
-                <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background-color: rgba(155, 154, 151, 0.15);">
-                  <svg class="w-4 h-4" fill="none" stroke="#9B9A97" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                  </svg>
+              
+              <!-- Rechazados -->
+              <div class="group cursor-default">
+                <div class="flex items-center gap-3 mb-2">
+                  <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background-color: rgba(155, 154, 151, 0.15);">
+                    <svg class="w-4 h-4" fill="none" stroke="#9B9A97" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                    </svg>
+                  </div>
+                  <span class="text-sm" style="color: #787774;">Rechazados</span>
                 </div>
-                <span class="text-sm" style="color: #787774;">Rechazados</span>
+                <p class="text-2xl font-semibold" style="color: #9B9A97;">{{ metrics()!.totalRejects | number }}</p>
               </div>
-              <p class="text-2xl font-semibold" style="color: #9B9A97;">{{ metrics()!.totalRejects | number }}</p>
+              
+              <!-- WhatsApp Campañas -->
+              <div class="group cursor-default">
+                <div class="flex items-center gap-3 mb-2">
+                  <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background-color: rgba(37, 211, 102, 0.15);">
+                    <svg class="w-4 h-4" fill="none" stroke="#25D366" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </div>
+                  <span class="text-sm" style="color: #787774;">WhatsApp Campañas</span>
+                </div>
+                <p class="text-2xl font-semibold" style="color: #25D366;">{{ whatsappCampaigns().length }}</p>
+              </div>
             </div>
           </div>
-        </div>
-      }
+        }
+        
+        <!-- Tabs estilo Notion sin líneas -->
+        <div class="mb-6">
+          <div class="flex gap-6 mb-6">
+            <button 
+              (click)="activeTab.set('users')"
+              class="text-sm font-medium transition-colors pb-1"
+              [style.color]="activeTab() === 'users' ? '#37352F' : '#787774'"
+              [style.border-bottom]="activeTab() === 'users' ? '2px solid #37352F' : '2px solid transparent'">
+              Usuarios
+            </button>
+            <button 
+              (click)="activeTab.set('campaigns')"
+              class="text-sm font-medium transition-colors pb-1"
+              [style.color]="activeTab() === 'campaigns' ? '#37352F' : '#787774'"
+              [style.border-bottom]="activeTab() === 'campaigns' ? '2px solid #37352F' : '2px solid transparent'">
+              Campañas
+            </button>
+            <button 
+              (click)="activeTab.set('lists')"
+              class="text-sm font-medium transition-colors pb-1"
+              [style.color]="activeTab() === 'lists' ? '#37352F' : '#787774'"
+              [style.border-bottom]="activeTab() === 'lists' ? '2px solid #37352F' : '2px solid transparent'">
+              Listas de Contactos
+            </button>
+            <button 
+              (click)="activeTab.set('whatsapp')"
+              class="text-sm font-medium transition-colors pb-1"
+              [style.color]="activeTab() === 'whatsapp' ? '#37352F' : '#787774'"
+              [style.border-bottom]="activeTab() === 'whatsapp' ? '2px solid #37352F' : '2px solid transparent'">
+              WhatsApp
+            </button>
+          </div>
 
       <!-- Tabs estilo Notion sin líneas -->
       <div class="mb-6">
@@ -365,6 +412,70 @@ import { ContactList } from '../../../core/models/contact.model';
             }
           </div>
         }
+        
+        <!-- WhatsApp Tab -->
+        @if (activeTab() === 'whatsapp') {
+          <div>
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-base font-medium" style="color: #37352F;">Campañas de WhatsApp</h3>
+              <button (click)="loadWhatsAppCampaigns()" class="text-sm hover:underline" style="color: #787774;">
+                Actualizar
+              </button>
+            </div>
+            
+            @if (loading()) {
+              <div class="flex justify-center py-8">
+                <div class="animate-spin rounded-full h-5 w-5" style="border: 2px solid #E9E9E7; border-top-color: #37352F;"></div>
+              </div>
+            } @else {
+              <div class="space-y-1">
+                @for (campaign of whatsappCampaigns(); track campaign.id) {
+                  <div class="flex items-center justify-between py-3 px-2 rounded-lg transition-colors hover:bg-[#F7F6F3]">
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium truncate" style="color: #37352F;">{{ campaign.templateName }}</p>
+                      <p class="text-xs" style="color: #9B9A97;">{{ getUserName(campaign.ownerId) }} · WhatsApp</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                      <span class="text-xs px-2 py-0.5 rounded" style="background-color: rgba(37, 211, 102, 0.15); color: #25D366;">
+                        {{ campaign.status || 'ACTIVE' }}
+                      </span>
+                      <span class="text-xs" style="color: #9B9A97;">{{ campaign.createdAt ? (campaign.createdAt | date:'dd/MM/yyyy') : 'N/A' }}</span>
+                      <button
+                        (click)="deleteWhatsAppCampaign(campaign.id)"
+                        class="text-xs hover:underline"
+                        style="color: #E03E3E;">
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+              
+              <!-- Pagination -->
+              @if (whatsappTotalPages() > 1) {
+                <div class="flex justify-center items-center gap-3 mt-6 text-sm">
+                  <button 
+                    (click)="changeWhatsAppPage(whatsappCurrentPage() - 1)" 
+                    [disabled]="whatsappCurrentPage() === 0"
+                    class="px-2 py-1 rounded disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F7F6F3]"
+                    style="color: #787774;">
+                    ←
+                  </button>
+                  <span style="color: #9B9A97;">
+                    {{ whatsappCurrentPage() + 1 }} / {{ whatsappTotalPages() }}
+                  </span>
+                  <button 
+                    (click)="changeWhatsAppPage(whatsappCurrentPage() + 1)" 
+                    [disabled]="whatsappCurrentPage() >= whatsappTotalPages() - 1"
+                    class="px-2 py-1 rounded disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F7F6F3]"
+                    style="color: #787774;">
+                    →
+                  </button>
+                </div>
+              }
+            }
+          </div>
+        }
       </div>
     </div>
   `
@@ -375,7 +486,7 @@ export class AdminDashboardComponent implements OnInit {
   private router = inject(Router);
 
   // Signals
-  activeTab = signal<'users' | 'campaigns' | 'lists'>('users');
+  activeTab = signal<'users' | 'campaigns' | 'lists' | 'whatsapp'>('users');
   loading = signal(false);
   
   // Pagination Signals
@@ -385,6 +496,8 @@ export class AdminDashboardComponent implements OnInit {
   campaignsTotalPages = signal(0);
   listsCurrentPage = signal(0);
   listsTotalPages = signal(0);
+  whatsappCurrentPage = signal(0);
+  whatsappTotalPages = signal(0);
   
   private pageSize = 10;
   
@@ -394,6 +507,7 @@ export class AdminDashboardComponent implements OnInit {
   users = this.adminService.users;
   campaigns = this.adminService.campaigns;
   contactLists = this.adminService.contactLists;
+  whatsappCampaigns = signal<WhatsAppCampaign[]>([]);
   
   // Mapa de usuarios para mostrar nombres
   private userMap = new Map<string, string>();
@@ -562,5 +676,42 @@ export class AdminDashboardComponent implements OnInit {
 
   viewContacts(listId: string) {
     this.router.navigate(['/admin/contacts', listId]);
+  }
+
+  loadWhatsAppCampaigns() {
+    this.loading.set(true);
+    this.adminService.getWhatsAppCampaignsByUser('all', this.whatsappCurrentPage(), this.pageSize).subscribe({
+      next: (response) => {
+        this.loading.set(false);
+        this.whatsappCampaigns.set(response.content || []);
+        this.whatsappTotalPages.set(response.totalPages || 0);
+      },
+      error: () => {
+        this.loading.set(false);
+        this.whatsappCampaigns.set([]);
+      }
+    });
+  }
+
+  changeWhatsAppPage(page: number) {
+    if (page >= 0 && page < this.whatsappTotalPages()) {
+      this.whatsappCurrentPage.set(page);
+      this.loadWhatsAppCampaigns();
+    }
+  }
+
+  deleteWhatsAppCampaign(campaignId: string) {
+    if (confirm('¿Estás seguro de que deseas eliminar esta campaña de WhatsApp?')) {
+      this.adminService.deleteWhatsAppCampaign(campaignId).subscribe({
+        next: () => {
+          alert('Campaña de WhatsApp eliminada exitosamente');
+          this.loadWhatsAppCampaigns();
+        },
+        error: (err) => {
+          console.error('Error deleting WhatsApp campaign:', err);
+          alert('Error al eliminar campaña de WhatsApp');
+        }
+      });
+    }
   }
 }

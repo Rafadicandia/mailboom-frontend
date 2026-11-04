@@ -1,0 +1,207 @@
+<div class="whatsapp-step-container">
+  <!-- Encabezado del paso -->
+  <div class="step-header">
+    <div class="step-progress">
+      <div class="progress-bar">
+        <div 
+          class="progress-fill" 
+          [style.width.%]="getProgressPercentage()"
+        ></div>
+      </div>
+      <div class="step-indicator">
+        <span 
+          class="step-number" 
+          [class.active]="currentStep() === 'select'"
+        >1</span>
+        <span class="step-divider">/</span>
+        <span 
+          class="step-number" 
+          [class.active]="currentStep() === 'configure'"
+        >2</span>
+        <span class="step-divider">/</span>
+        <span 
+          class="step-number" 
+          [class.active]="currentStep() === 'preview'"
+        >3</span>
+      </div>
+    </div>
+    <h2 class="step-title">{{ getStepTitle() }}</h2>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="step-content">
+    <!-- Paso 1: Selección de plantilla -->
+    @if (currentStep() === 'select') {
+      <div class="step-section">
+        <div class="section-header">
+          <h3>Elige tu plantilla de WhatsApp</h3>
+          <p class="section-description">
+            Selecciona una plantilla predefinida para tu campaña. 
+            Todas las plantillas están aprobadas y listas para usar.
+          </p>
+        </div>
+
+        <app-whatsapp-template-selector
+          [selectedTemplate]="selectedTemplate()?.name || ''"
+          [selectedLanguage]="languageCode()"
+          (templateChange)="onTemplateSelected($event)"
+          (languageChange)="onLanguageChanged($event)"
+        ></app-whatsapp-template-selector>
+
+        <div class="create-template-section">
+          <div class="divider">
+            <span>o</span>
+          </div>
+          
+          <div class="create-template-card">
+            <div class="create-template-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </div>
+            <h4>¿No encuentras la plantilla que necesitas?</h4>
+            <p>Crea una nueva plantilla personalizada y envíala a Meta para revisión</p>
+            <button 
+              type="button" 
+              class="btn btn-primary"
+              (click)="openTemplateCreate()"
+            >
+              Crear Nueva Plantilla
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Paso 2: Configuración de parámetros -->
+    @if (currentStep() === 'configure') {
+      <div class="step-section">
+        <div class="section-header">
+          <h3>Configura los parámetros</h3>
+          <p class="section-description">
+            Personaliza los parámetros de la plantilla según tus necesidades.
+            Los campos marcados con * son obligatorios.
+          </p>
+        </div>
+
+        @if (selectedTemplate()) {
+          <div class="phone-input-section">
+            <label class="form-label">Número de WhatsApp de destino *</label>
+            <input
+              type="tel"
+              class="form-input"
+              [value]="phoneNumber()"
+              (input)="onPhoneNumberChange($any($event.target).value)"
+              placeholder="Ej: +5491112345678"
+            />
+            <p class="input-hint">
+              Usa formato internacional (E.164) sin espacios
+            </p>
+          </div>
+
+          <app-whatsapp-parameter-config
+            [template]="selectedTemplate()"
+            [parameters]="templateParameters()"
+            (parametersChange)="onParametersChanged($event)"
+          ></app-whatsapp-parameter-config>
+        }
+      </div>
+    }
+
+    <!-- Paso 3: Vista previa -->
+    @if (currentStep() === 'preview') {
+      <div class="step-section">
+        <div class="section-header">
+          <h3>Vista previa del mensaje</h3>
+          <p class="section-description">
+            Revisa cómo se verá tu mensaje antes de enviarlo.
+            Asegúrate de que todos los datos sean correctos.
+          </p>
+        </div>
+
+        @if (selectedTemplate()) {
+          <app-whatsapp-preview
+            [template]="selectedTemplate()"
+            [parameters]="templateParameters()"
+            [phoneNumber]="phoneNumber()"
+            [languageCode]="languageCode()"
+            (send)="onPreviewComplete()"
+            (edit)="onEditTemplate()"
+          ></app-whatsapp-preview>
+        }
+      </div>
+    }
+
+    <!-- Mensajes de estado -->
+    @if (errorMessage()) {
+      <div class="alert alert-error">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    @if (successMessage()) {
+      <div class="alert alert-success">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <span>{{ successMessage() }}</span>
+      </div>
+    }
+  </div>
+
+  <!-- Barra de acciones -->
+  <div class="step-actions">
+    <div class="action-buttons">
+      @if (currentStep() !== 'select') {
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="goToPreviousStep()"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          Anterior
+        </button>
+      }
+
+      @if (currentStep() !== 'preview') {
+        <button
+          type="button"
+          class="btn btn-primary"
+          [class.disabled]="!canGoNext()"
+          (click)="goToNextStep()"
+          [disabled]="!canGoNext()"
+        >
+          Siguiente
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </button>
+      }
+
+      @if (currentStep() === 'preview') {
+        <button
+          type="button"
+          class="btn btn-success"
+          (click)="validateAndComplete()"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          Completar Paso
+        </button>
+      }
+    </div>
+  </div>
+</div>
