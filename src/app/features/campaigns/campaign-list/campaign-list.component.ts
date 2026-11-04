@@ -5,6 +5,7 @@ import { CampaignService } from '../../../core/services/campaign.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { AdminService } from '../../../core/services/admin.service';
 import { Campaign } from '../../../core/models/campaign.model';
+import { WhatsAppCampaign } from '../../../core/models/whatsapp-campaign.model';
 
 @Component({
   selector: 'app-campaign-list',
@@ -168,8 +169,8 @@ import { Campaign } from '../../../core/models/campaign.model';
           <!-- Paginación estilo Notion limpio -->
           @if (totalPages() > 1) {
             <div class="flex justify-center items-center gap-3 mt-6 text-sm">
-              <button 
-                (click)="changePage(currentPage() - 1)" 
+              <button
+                (click)="changePage(currentPage() - 1)"
                 [disabled]="currentPage() === 0"
                 class="px-2 py-1 rounded disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F7F6F3]"
                 style="color: #787774;">
@@ -178,14 +179,115 @@ import { Campaign } from '../../../core/models/campaign.model';
               <span style="color: #9B9A97;">
                 {{ currentPage() + 1 }} / {{ totalPages() }}
               </span>
-              <button 
-                (click)="changePage(currentPage() + 1)" 
+              <button
+                (click)="changePage(currentPage() + 1)"
                 [disabled]="currentPage() >= totalPages() - 1"
                 class="px-2 py-1 rounded disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F7F6F3]"
                 style="color: #787774;">
                 →
               </button>
             </div>
+          }
+        </div>
+      }
+
+      <!-- WhatsApp Campaigns Section - Solo visible para admin -->
+      @if (isAdmin()) {
+        <div class="mt-12 pt-8" style="border-top: 1px solid #E9E9E7;">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="text-lg font-medium" style="color: #37352F;">Campañas de WhatsApp</h2>
+              <p class="text-sm" style="color: #787774;">Gestiona tus campañas de WhatsApp</p>
+            </div>
+            <button (click)="goToWhatsAppSender()"
+                    class="inline-flex items-center px-4 py-2.5 rounded-lg transition-colors text-sm font-medium"
+                    style="background-color: #25D366; color: white;">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+              </svg>
+              Nueva Campaña WhatsApp
+            </button>
+          </div>
+
+          <!-- Stats WhatsApp -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+            <div class="group cursor-default">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background-color: rgba(37, 211, 102, 0.15);">
+                  <svg class="w-4 h-4" fill="none" stroke="#25D366" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                  </svg>
+                </div>
+                <span class="text-sm" style="color: #787774;">WhatsApp Campañas</span>
+              </div>
+              <p class="text-2xl font-semibold" style="color: #25D366;">{{ whatsappCampaigns().length }}</p>
+            </div>
+          </div>
+
+          @if (whatsappLoading()) {
+            <div class="flex justify-center py-8">
+              <div class="animate-spin rounded-full h-5 w-5" style="border: 2px solid #E9E9E7; border-top-color: #25D366;"></div>
+            </div>
+          } @else if (whatsappCampaigns().length === 0) {
+            <div class="py-8 text-center">
+              <div class="w-12 h-12 mx-auto mb-4 rounded-lg flex items-center justify-center" style="background-color: #F7F6F3;">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #787774;">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                </svg>
+              </div>
+              <h3 class="text-base font-medium mb-2" style="color: #37352F;">No hay campañas de WhatsApp</h3>
+              <p class="text-sm mb-6" style="color: #787774;">Crea tu primera campaña de WhatsApp para comenzar</p>
+              <button (click)="goToWhatsAppSender()"
+                      class="inline-flex items-center px-4 py-2.5 rounded-lg transition-colors text-sm font-medium"
+                      style="background-color: #25D366; color: white;">
+                Crear campaña WhatsApp
+              </button>
+            </div>
+          } @else {
+            <div class="space-y-1">
+              @for (campaign of whatsappCampaigns(); track campaign.id) {
+                <div class="flex items-center justify-between py-3 px-2 rounded-lg transition-colors hover:bg-[#F7F6F3]">
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium truncate" style="color: #37352F;">{{ campaign.templateName }}</p>
+                    <p class="text-xs" style="color: #9B9A97;">WhatsApp</p>
+                  </div>
+                  <div class="flex items-center gap-4">
+                    <span class="text-xs px-2 py-0.5 rounded" style="background-color: rgba(37, 211, 102, 0.15); color: #25D366;">
+                      {{ campaign.status || 'ACTIVE' }}
+                    </span>
+                    <span class="text-xs" style="color: #9B9A97;">{{ campaign.createdAt ? (campaign.createdAt | date:'dd/MM/yyyy') : 'N/A' }}</span>
+                    <button (click)="deleteWhatsAppCampaign(campaign.id)"
+                            class="text-xs hover:underline"
+                            style="color: #E03E3E;">
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Paginación WhatsApp -->
+            @if (whatsappTotalPages() > 1) {
+              <div class="flex justify-center items-center gap-3 mt-6 text-sm">
+                <button
+                  (click)="changeWhatsAppPage(whatsappCurrentPage() - 1)"
+                  [disabled]="whatsappCurrentPage() === 0"
+                  class="px-2 py-1 rounded disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F7F6F3]"
+                  style="color: #787774;">
+                  ←
+                </button>
+                <span style="color: #9B9A97;">
+                  {{ whatsappCurrentPage() + 1 }} / {{ whatsappTotalPages() }}
+                </span>
+                <button
+                  (click)="changeWhatsAppPage(whatsappCurrentPage() + 1)"
+                  [disabled]="whatsappCurrentPage() >= whatsappTotalPages() - 1"
+                  class="px-2 py-1 rounded disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F7F6F3]"
+                  style="color: #787774;">
+                  →
+                </button>
+              </div>
+            }
           }
         </div>
       }
@@ -234,12 +336,22 @@ export class CampaignListComponent implements OnInit {
   private _currentPage = signal(0);
   private _totalPages = signal(0);
   
+  // Signals para campañas de WhatsApp
+  private _whatsappCampaigns = signal<WhatsAppCampaign[]>([]);
+  private _whatsappLoading = signal(false);
+  private _whatsappCurrentPage = signal(0);
+  private _whatsappTotalPages = signal(0);
+  
   // Exponer las campañas - usar las locales si es admin, si no las del servicio
   campaigns = computed(() => this.isAdmin() ? this._campaigns() : this.campaignService.campaigns());
   draftCampaigns = computed(() => this.campaigns().filter(c => c.status === 'DRAFT'));
   isLoading = computed(() => this.isAdmin() ? this._loading() : this.campaignService.loading());
   currentPage = computed(() => this.isAdmin() ? this._currentPage() : this.campaignService.currentPage());
   totalPages = computed(() => this.isAdmin() ? this._totalPages() : this.campaignService.totalPages());
+  whatsappCampaigns = computed(() => this._whatsappCampaigns());
+  whatsappLoading = computed(() => this._whatsappLoading());
+  whatsappCurrentPage = computed(() => this._whatsappCurrentPage());
+  whatsappTotalPages = computed(() => this._whatsappTotalPages());
   showPreview = signal(false);
   previewCampaignData = signal<Campaign | null>(null);
   isAdmin = this.authService.isAdmin;
@@ -264,6 +376,8 @@ export class CampaignListComponent implements OnInit {
           this._loading.set(false);
         }
       });
+      // También cargar campañas de WhatsApp
+      this.loadWhatsAppCampaigns();
     } else {
       // Si no es admin, cargar solo las campañas del usuario
       const userId = this.authService.currentUser()?.id;
@@ -315,6 +429,48 @@ export class CampaignListComponent implements OnInit {
       'CANCELLED': 'Cancelada'
     };
     return statusMap[status] || status;
+  }
+
+  loadWhatsAppCampaigns() {
+    if (this.isAdmin()) {
+      this._whatsappLoading.set(true);
+      this.adminService.getWhatsAppCampaignsByUser('all', this._whatsappCurrentPage(), 10).subscribe({
+        next: (response) => {
+          this._whatsappCampaigns.set(response.content || []);
+          this._whatsappTotalPages.set(response.totalPages || 0);
+          this._whatsappLoading.set(false);
+        },
+        error: (err) => {
+          console.error('Error cargando campañas de WhatsApp:', err);
+          this._whatsappCampaigns.set([]);
+          this._whatsappLoading.set(false);
+        }
+      });
+    }
+  }
+
+  changeWhatsAppPage(page: number) {
+    if (page < 0 || page >= this._whatsappTotalPages()) return;
+    this._whatsappCurrentPage.set(page);
+    this.loadWhatsAppCampaigns();
+  }
+
+  deleteWhatsAppCampaign(campaignId: string) {
+    if (!confirm('¿Estás seguro de eliminar esta campaña de WhatsApp?')) return;
+    
+    this.adminService.deleteWhatsAppCampaign(campaignId).subscribe({
+      next: () => {
+        this._whatsappCampaigns.update(list => list.filter(c => c.id !== campaignId));
+      },
+      error: (err) => {
+        console.error('Error eliminando campaña de WhatsApp:', err);
+        alert('Error al eliminar campaña de WhatsApp');
+      }
+    });
+  }
+
+  goToWhatsAppSender() {
+    this.router.navigate(['/whatsapp/send']);
   }
 
   editCampaign(campaign: Campaign) {

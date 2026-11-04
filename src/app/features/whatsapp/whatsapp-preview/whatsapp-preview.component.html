@@ -1,0 +1,221 @@
+<div class="preview-container">
+  <div class="preview-header">
+    <h3 class="preview-title">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+      </svg>
+      Vista Previa
+    </h3>
+    <div class="preview-actions">
+      <button
+        type="button"
+        class="btn btn-icon" 
+        (click)="togglePreviewMode()"
+        [attr.aria-label]="previewMode() === 'mobile' ? 'Vista de escritorio' : 'Vista móvil'"
+        title="Cambiar vista"
+      >
+        <svg *ngIf="previewMode() === 'mobile'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+          <line x1="12" y1="18" x2="12.01" y2="18"></line>
+        </svg>
+        <svg *ngIf="previewMode() === 'desktop'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+      </button>
+      <button
+        type="button"
+        class="btn btn-icon" 
+        (click)="toggleRawData()"
+        title="Mostrar datos brutos"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="16 18 22 12 16 6"></polyline>
+          <polyline points="8 6 2 12 8 18"></polyline>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Vista previa del mensaje -->
+  <div class="preview-content">
+    @if (showRawData()) {
+      <div class="raw-data-container">
+        <h4 class="raw-data-title">Datos del mensaje</h4>
+        <pre class="raw-data"><code>{{ getRawData() }}</code></pre>
+      </div>
+    } @else {
+      <div class="whatsapp-mock {{ previewMode() }}">
+        <!-- Encabezado del chat -->
+        <div class="chat-header">
+          <div class="chat-avatar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <div class="chat-info">
+            <div class="chat-name">{{ phoneNumber || 'Número no especificado' }}</div>
+            <div class="chat-status">
+              <span class="status-dot"></span>
+              En línea
+            </div>
+          </div>
+          <div class="chat-actions">
+            <button class="btn-icon" title="Más opciones">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="1"></circle>
+                <circle cx="12" cy="5" r="1"></circle>
+                <circle cx="12" cy="19" r="1"></circle>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mensajes -->
+        <div class="chat-messages">
+          <!-- Mensaje del sistema/bot -->
+          @if (template) {
+            <div class="message received">
+              <div class="message-bubble">
+                @if (headerContent) {
+                  <div class="message-header">{{ headerContent }}</div>
+                }
+                <div class="message-body">{{ renderedContent }}</div>
+                @if (footerContent) {
+                  <div class="message-footer">{{ footerContent }}</div>
+                }
+                @if (hasMedia) {
+                  <div class="message-media">
+                    @for (media of mediaItems; track $index) {
+                      @if (media.type === 'image') {
+                        <div class="media-item media-image">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                          </svg>
+                          <span>Imagen</span>
+                        </div>
+                      }
+                      @if (media.type === 'document') {
+                        <div class="media-item media-document">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                          </svg>
+                          <span>Documento</span>
+                        </div>
+                      }
+                      @if (media.type === 'video') {
+                        <div class="media-item media-video">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                          </svg>
+                          <span>Video</span>
+                        </div>
+                      }
+                      @if (media.type === 'location') {
+                        <div class="media-item media-location">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                          </svg>
+                          <span>Ubicación</span>
+                        </div>
+                      }
+                    }
+                  </div>
+                }
+                <div class="message-time">12:00 PM</div>
+              </div>
+            </div>
+          }
+
+          @if (!template) {
+            <div class="empty-preview">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <p>Selecciona una plantilla para ver la vista previa</p>
+            </div>
+          }
+        </div>
+
+        <!-- Área de entrada -->
+        <div class="chat-input-area">
+          <div class="typing-indicator" *ngIf="loading()">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Información del template -->
+  @if (template) {
+    <div class="template-info">
+      <div class="info-row">
+        <span class="info-label">Plantilla:</span>
+        <span class="info-value">{{ templateName }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Estado:</span>
+        <span class="badge {{ statusBadgeClass }}">{{ template.status }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Idioma:</span>
+        <span class="info-value">{{ languageCode.toUpperCase() }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Parámetros:</span>
+        <span class="info-value">{{ parameterCount }} configurado(s)</span>
+      </div>
+    </div>
+  }
+
+  <!-- Acciones -->
+  <div class="preview-actions-bar">
+    @if (errorMessage()) {
+      <div class="alert alert-error">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <div class="action-buttons">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="onEdit()"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+        Editar
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary" 
+        [class.disabled]="!isReadyToSend"
+        (click)="onSend()"
+        [disabled]="!isReadyToSend"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+        Enviar por WhatsApp
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,358 @@
+<div class="parameter-config-container" *ngIf="template">
+  <div class="config-header">
+    <h3 class="config-title">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 20h9"></path>
+        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+      </svg>
+      Configurar Parámetros
+    </h3>
+    <p class="config-subtitle">Plantilla: <strong>{{ template.name }}</strong></p>
+  </div>
+
+  @if (parametersArray.length === 0) {
+    <div class="empty-state">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 11l3 3L22 4"></path>
+        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+      </svg>
+      <p>Esta plantilla no requiere parámetros</p>
+    </div>
+  }
+
+  @if (parametersArray.length > 0) {
+    <form [formGroup]="parameterForm" (ngSubmit)="onParameterValueChange()" class="parameters-form">
+      <div class="parameters-list">
+        @for (param of parametersArray.controls; track $index; let i = $index) {
+          <div class="parameter-card" [class.has-error]="param.invalid && param.touched">
+            <div class="parameter-header">
+              <span class="parameter-index">Parámetro {{ getPlaceholderForParam(i) }}</span>
+              <span class="parameter-type-indicator">
+                {{ getTypeLabel($any(param).get('type')?.value) }}
+              </span>
+            </div>
+
+            <div class="parameter-fields">
+              <!-- Selector de tipo -->
+              <div class="form-group">
+                <label class="form-label">Tipo de dato</label>
+                <select
+                  class="form-select"
+                  [formControl]="$any(param).get('type')"
+                  (change)="onParameterTypeChange(i, $any($event.target).value)"
+                >
+                  <option value="text">Texto</option>
+                  <option value="currency">Moneda</option>
+                  <option value="date_time">Fecha/Hora</option>
+                  <option value="image">Imagen</option>
+                  <option value="document">Documento</option>
+                  <option value="video">Video</option>
+                  <option value="location">Ubicación</option>
+                </select>
+              </div>
+
+              <!-- Campo de texto -->
+              @if (isTypeSelected(i, 'text')) {
+                <div class="form-group">
+                  <label class="form-label">Valor de texto</label>
+                  <input
+                    type="text"
+                    class="form-input"
+                    [formControl]="$any(param).get('text')"
+                    (input)="onParameterValueChange()"
+                    placeholder="Ingrese el valor de texto"
+                  />
+                  @if ($any(param).get('text')?.invalid && $any(param).get('text')?.touched) {
+                    <p class="error-message">Este campo es requerido</p>
+                  }
+                </div>
+              }
+
+              <!-- Campos de moneda -->
+              @if (isTypeSelected(i, 'currency')) {
+                <div class="currency-fields">
+                  <div class="form-group">
+                    <label class="form-label">Código de moneda</label>
+                    <select
+                      class="form-select"
+                      [formControl]="$any(param).get('currency')?.get('code')"
+                      (change)="onParameterValueChange()"
+                    >
+                      @for (code of getCurrencyCodes(); track code) {
+                        <option value="{{code}}">{{code}}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Monto (en centavos)</label>
+                    <input
+                      type="number"
+                      class="form-input"
+                      [formControl]="$any(param).get('currency')?.get('amount_1000')"
+                      (input)="onParameterValueChange()"
+                      placeholder="Ej: 1000 para $10.00"
+                      min="0"
+                    />
+                    @if ($any(param).get('currency')?.get('amount_1000')?.invalid) {
+                      <p class="error-message">Ingrese un monto válido</p>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- Campos de fecha/hora -->
+              @if (isTypeSelected(i, 'date_time')) {
+                <div class="datetime-fields">
+                  <div class="form-group">
+                    <label class="form-label">Valor por defecto</label>
+                    <input
+                      type="text"
+                      class="form-input"
+                      [formControl]="$any(param).get('date_time')?.get('fallback_value')"
+                      (input)="onParameterValueChange()"
+                      placeholder="Ej: 2024-01-15 10:00"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Día de la semana</label>
+                    <select
+                      class="form-select"
+                      [formControl]="$any(param).get('date_time')?.get('day_of_week')"
+                      (change)="onParameterValueChange()"
+                    >
+                      <option value="">Ninguno</option>
+                      @for (day of getWeekDays(); track $index; let idx = $index) {
+                        <option value="{{idx}}">{{day}}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">Año</label>
+                      <input
+                        type="number"
+                        class="form-input"
+                        [formControl]="$any(param).get('date_time')?.get('year')"
+                        (input)="onParameterValueChange()"
+                        placeholder="2024"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Mes</label>
+                      <select
+                        class="form-select"
+                        [formControl]="$any(param).get('date_time')?.get('month')"
+                        (change)="onParameterValueChange()"
+                      >
+                        <option value="">Ninguno</option>
+                        @for (month of getMonths(); track $index; let idx = $index) {
+                          <option value="{{idx + 1}}">{{month}}</option>
+                        }
+                      </select>
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">Día</label>
+                      <input
+                        type="number"
+                        class="form-input"
+                        [formControl]="$any(param).get('date_time')?.get('day_of_month')"
+                        (input)="onParameterValueChange()"
+                        placeholder="1-31"
+                        min="1"
+                        max="31"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Hora</label>
+                      <input
+                        type="number"
+                        class="form-input"
+                        [formControl]="$any(param).get('date_time')?.get('hour')"
+                        (input)="onParameterValueChange()"
+                        placeholder="0-23"
+                        min="0"
+                        max="23"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Minuto</label>
+                      <input
+                        type="number"
+                        class="form-input"
+                        [formControl]="$any(param).get('date_time')?.get('minute')"
+                        (input)="onParameterValueChange()"
+                        placeholder="0-59"
+                        min="0"
+                        max="59"
+                      />
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- Campo de imagen -->
+              @if (isTypeSelected(i, 'image')) {
+                <div class="form-group">
+                  <label class="form-label">URL de la imagen</label>
+                  <input
+                    type="url"
+                    class="form-input"
+                    [formControl]="$any(param).get('image')?.get('link')"
+                    (input)="onParameterValueChange()"
+                    placeholder="https://ejemplo.com/imagen.jpg"
+                  />
+                  @if ($any(param).get('image')?.get('link')?.invalid) {
+                    <p class="error-message">Ingrese una URL válida</p>
+                  }
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Subtítulo (opcional)</label>
+                  <input
+                    type="text"
+                    class="form-input"
+                    [formControl]="$any(param).get('image')?.get('caption')"
+                    (input)="onParameterValueChange()"
+                    placeholder="Subtítulo de la imagen"
+                  />
+                </div>
+              }
+
+              <!-- Campo de documento -->
+              @if (isTypeSelected(i, 'document')) {
+                <div class="form-group">
+                  <label class="form-label">URL del documento</label>
+                  <input
+                    type="url"
+                    class="form-input"
+                    [formControl]="$any(param).get('document')?.get('link')"
+                    (input)="onParameterValueChange()"
+                    placeholder="https://ejemplo.com/documento.pdf"
+                  />
+                  @if ($any(param).get('document')?.get('link')?.invalid) {
+                    <p class="error-message">Ingrese una URL válida</p>
+                  }
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Nombre del archivo (opcional)</label>
+                  <input
+                    type="text"
+                    class="form-input"
+                    [formControl]="$any(param).get('document')?.get('filename')"
+                    (input)="onParameterValueChange()"
+                    placeholder="documento.pdf"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Subtítulo (opcional)</label>
+                  <input
+                    type="text"
+                    class="form-input"
+                    [formControl]="$any(param).get('document')?.get('caption')"
+                    (input)="onParameterValueChange()"
+                    placeholder="Subtítulo del documento"
+                  />
+                </div>
+              }
+
+              <!-- Campo de video -->
+              @if (isTypeSelected(i, 'video')) {
+                <div class="form-group">
+                  <label class="form-label">URL del video</label>
+                  <input
+                    type="url"
+                    class="form-input"
+                    [formControl]="$any(param).get('video')?.get('link')"
+                    (input)="onParameterValueChange()"
+                    placeholder="https://ejemplo.com/video.mp4"
+                  />
+                  @if ($any(param).get('video')?.get('link')?.invalid) {
+                    <p class="error-message">Ingrese una URL válida</p>
+                  }
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Subtítulo (opcional)</label>
+                  <input
+                    type="text"
+                    class="form-input"
+                    [formControl]="$any(param).get('video')?.get('caption')"
+                    (input)="onParameterValueChange()"
+                    placeholder="Subtítulo del video"
+                  />
+                </div>
+              }
+
+              <!-- Campo de ubicación -->
+              @if (isTypeSelected(i, 'location')) {
+                <div class="location-fields">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">Latitud</label>
+                      <input
+                        type="number"
+                        class="form-input"
+                        [formControl]="$any(param).get('location')?.get('latitude')"
+                        (input)="onParameterValueChange()"
+                        placeholder="-90 a 90"
+                        step="any"
+                      />
+                      @if ($any(param).get('location')?.get('latitude')?.invalid) {
+                        <p class="error-message">Ingrese una latitud válida</p>
+                      }
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Longitud</label>
+                      <input
+                        type="number"
+                        class="form-input"
+                        [formControl]="$any(param).get('location')?.get('longitude')"
+                        (input)="onParameterValueChange()"
+                        placeholder="-180 a 180"
+                        step="any"
+                      />
+                      @if ($any(param).get('location')?.get('longitude')?.invalid) {
+                        <p class="error-message">Ingrese una longitud válida</p>
+                      }
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Nombre del lugar (opcional)</label>
+                    <input
+                      type="text"
+                      class="form-input"
+                      [formControl]="$any(param).get('location')?.get('name')"
+                      (input)="onParameterValueChange()"
+                      placeholder="Nombre del lugar"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Dirección (opcional)</label>
+                    <input
+                      type="text"
+                      class="form-input"
+                      [formControl]="$any(param).get('location')?.get('address')"
+                      (input)="onParameterValueChange()"
+                      placeholder="Dirección completa"
+                    />
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </form>
+  }
+
+  @if (errorMessage()) {
+    <div class="alert alert-error">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+        <line x1="12" y1="9" x2="12" y2="13"></line>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+      <span>{{ errorMessage() }}</span>
+    </div>
+  }
+</div>

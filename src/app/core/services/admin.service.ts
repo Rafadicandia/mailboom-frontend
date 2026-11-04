@@ -4,6 +4,8 @@ import { Observable, tap, map } from 'rxjs';
 import { User } from '../models/auth.model';
 import { Campaign } from '../models/campaign.model';
 import { ContactList, Contact } from '../models/contact.model';
+import { SendTemplateMessageRequest, SendTemplateMessageResponse, TemplateInfo, CreateTemplateRequest, CreateTemplateResponse } from '../models/whatsapp.model';
+import { WhatsAppCampaign, NewWhatsAppCampaignRequest, SendWhatsAppCampaignRequest } from '../models/whatsapp-campaign.model';
 
 export interface PaginatedResponse<T> {
   content: T[];
@@ -210,6 +212,70 @@ export class AdminService {
 
   deleteContact(id: string): Observable<void> {
     return this.http.delete<void>(`${this.API_URL}/contacts/${id}`);
+  }
+
+  // ========== WHATSAPP OPERATIONS ==========
+
+  sendTemplateMessage(data: SendTemplateMessageRequest): Observable<SendTemplateMessageResponse> {
+    return this.http.post<SendTemplateMessageResponse>('/api/whatsapp/messages/send-template', data);
+  }
+
+  // ========== WHATSAPP TEMPLATE OPERATIONS ==========
+
+  getTemplates(): Observable<TemplateInfo[]> {
+    return this.http.get<TemplateInfo[]>('/api/whatsapp/templates');
+  }
+
+  getTemplateByName(name: string): Observable<TemplateInfo> {
+    return this.http.get<TemplateInfo>(`/api/whatsapp/templates/${encodeURIComponent(name)}`);
+  }
+
+  createTemplate(data: CreateTemplateRequest): Observable<CreateTemplateResponse> {
+    console.log('📄 CREATE WHATSAPP TEMPLATE - Request:', JSON.stringify(data, null, 2));
+    return this.http.post<CreateTemplateResponse>('/api/whatsapp/templates/new', data);
+  }
+
+  // ========== WHATSAPP CAMPAIGN OPERATIONS ==========
+
+  getWhatsAppCampaigns(page: number = 0, size: number = 10): Observable<PaginatedResponse<WhatsAppCampaign>> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    return this.http.get<PaginatedResponse<WhatsAppCampaign>>(`${this.API_URL}/whatsapp/campaigns`, { params });
+  }
+
+  getWhatsAppCampaignsByUser(userId: string, page: number = 0, size: number = 100): Observable<PaginatedResponse<WhatsAppCampaign>> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString())
+      .set('userId', userId);
+
+    return this.http.get<PaginatedResponse<WhatsAppCampaign>>(`${this.API_URL}/whatsapp/campaigns`, { params });
+  }
+
+  getWhatsAppCampaignById(id: string): Observable<WhatsAppCampaign> {
+    return this.http.get<WhatsAppCampaign>(`${this.API_URL}/whatsapp/campaigns/${id}`);
+  }
+
+  createWhatsAppCampaign(data: NewWhatsAppCampaignRequest): Observable<WhatsAppCampaign> {
+    console.log('💾 CREATE WHATSAPP CAMPAIGN (Admin) - Request:', JSON.stringify(data, null, 2));
+    return this.http.post<WhatsAppCampaign>(`${this.API_URL}/whatsapp/campaigns/new`, data);
+  }
+
+  updateWhatsAppCampaign(id: string, data: NewWhatsAppCampaignRequest): Observable<WhatsAppCampaign> {
+    console.log('💾 UPDATE WHATSAPP CAMPAIGN (Admin) - id:', id, ', Request:', JSON.stringify(data, null, 2));
+    return this.http.put<WhatsAppCampaign>(`${this.API_URL}/whatsapp/campaigns/${id}/update`, data);
+  }
+
+  deleteWhatsAppCampaign(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.API_URL}/whatsapp/campaigns/${id}/delete`);
+  }
+
+  sendWhatsAppCampaign(campaignId: string, ownerId: string): Observable<void> {
+    const request: SendWhatsAppCampaignRequest = { campaignId, ownerId };
+    console.log('🚀 SEND WHATSAPP CAMPAIGN (Admin) - Request:', JSON.stringify(request, null, 2));
+    return this.http.post<void>(`${this.API_URL}/whatsapp/campaigns/${campaignId}/send`, request);
   }
 
   // ========== STATS ==========

@@ -32,6 +32,11 @@ export const routes: Routes = [
             path: 'contacts/:id',
             loadComponent: () => import('./features/admin/list-contacts/list-contacts.component').then(m => m.ListContactsComponent),
             canActivate: [adminGuard]
+          },
+          {
+            path: 'whatsapp',
+            loadComponent: () => import('./features/admin/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent),
+            canActivate: [adminGuard]
           }
         ]
       },
@@ -56,9 +61,18 @@ export const routes: Routes = [
         path: 'audiences',
         loadComponent: () => import('./features/audiences/contact-list.component').then(m => m.ContactListComponent)
       },
-      {
+       {
         path: 'profile',
         loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent)
+      },
+      {
+        path: 'whatsapp',
+        children: [
+          {
+            path: 'send',
+            loadComponent: () => import('./features/whatsapp/whatsapp-sender/whatsapp-sender.component').then(m => m.WhatsappSenderComponent)
+          }
+        ]
       },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]

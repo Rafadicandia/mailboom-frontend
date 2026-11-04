@@ -1,0 +1,95 @@
+<div class="template-selector-container">
+  <!-- Selector de Idioma -->
+  <div class="form-group mb-4">
+    <label class="form-label">Idioma de la plantilla</label>
+    <select
+      class="form-select"
+      [value]="selectedLanguage"
+      (change)="onLanguageSelect($any($event.target).value)"
+    >
+      @for (lang of availableLanguages(); track lang.code) {
+        <option value="{{lang.code}}">{{lang.name}} ({{lang.code}})</option>
+      }
+    </select>
+  </div>
+
+  <!-- Estado de carga -->
+  @if (loading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p class="text-gray-600">Cargando plantillas...</p>
+    </div>
+  }
+
+  <!-- Mensaje de error -->
+  @if (errorMessage()) {
+    <div class="alert alert-error">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+        <line x1="12" y1="9" x2="12" y2="13"></line>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+      <span>{{ errorMessage() }}</span>
+      <button class="btn btn-sm" (click)="loadTemplates()">Reintentar</button>
+    </div>
+  }
+
+  <!-- Plantillas disponibles -->
+  @if (!loading() && filteredTemplates().length > 0) {
+    <div class="templates-grid">
+      @for (template of filteredTemplates(); track template.name) {
+        <div
+          class="template-card {{ selectedTemplate === template.name ? 'selected' : '' }}"
+          (click)="onTemplateSelect(template.name)"
+          [class.selected]="selectedTemplate === template.name"
+        >
+          <div class="template-header">
+            <h4 class="template-name">{{ template.name }}</h4>
+            <div class="badges">
+              <span class="badge {{ getTemplateCategoryBadgeClass(template.category) }}">
+                {{ template.category }}
+              </span>
+              <span class="badge {{ getStatusBadgeClass(template.status) }}">
+                {{ template.status }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="template-content">
+            @for (component of template.components; track component.type) {
+              @if (component.type === 'HEADER') {
+                <div class="template-component header">
+                  <strong>{{ component.text }}</strong>
+                </div>
+              }
+              @if (component.type === 'BODY') {
+                <div class="template-component body">
+                  {{ component.text }}
+                </div>
+              }
+              @if (component.type === 'FOOTER') {
+                <div class="template-component footer">
+                  <small>{{ component.text }}</small>
+                </div>
+              }
+            }
+          </div>
+
+          <div class="template-footer">
+            <span class="language-tag">{{ template.language.toUpperCase() }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Sin plantillas disponibles -->
+  @if (!loading() && filteredTemplates().length === 0 && !errorMessage()) {
+    <div class="empty-state">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+      </svg>
+      <p>No hay plantillas disponibles para este idioma</p>
+    </div>
+  }
+</div>

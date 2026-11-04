@@ -555,7 +555,7 @@ import {
                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
                        placeholder="Texto que aparece antes de abrir..."
                        maxlength="100">
-                <p class="text-xs text-gray-400 mt-1">{{ globalStyles.preheaderText?.length || 0 }}/100 caracteres</p>
+                 <p class="text-xs text-gray-400 mt-1">{{ globalStyles.preheaderText.length || 0 }}/100 caracteres</p>
               </div>
               
               <hr class="my-4 border-gray-200">

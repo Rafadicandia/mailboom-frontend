@@ -1,0 +1,151 @@
+<div class="whatsapp-sender-container">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+        </svg>
+        Enviar Mensaje por WhatsApp
+      </h2>
+    </div>
+
+    <form [formGroup]="sendForm" (ngSubmit)="onSubmit()" class="card-body">
+      <!-- Campo: Número de teléfono -->
+      <div class="form-group">
+        <label for="to" class="form-label">Número de WhatsApp *</label>
+        <input
+          type="tel"
+          id="to"
+          formControlName="to"
+          class="form-input"
+          [class.error]="sendForm.get('to')?.invalid && sendForm.get('to')?.touched"
+          placeholder="Ej: +5491112345678"
+        />
+        @if (sendForm.get('to')?.invalid && sendForm.get('to')?.touched) {
+          <p class="error-message">
+            Por favor ingrese un número de WhatsApp válido (formato internacional)
+          </p>
+        }
+      </div>
+
+      <!-- Campo: Plantilla -->
+      <div class="form-group">
+        <label for="templateName" class="form-label">Plantilla *</label>
+        <select
+          id="templateName"
+          formControlName="templateName"
+          class="form-select"
+          (change)="onTemplateSelectChange($event)"
+        >
+          <option value="">Seleccione una plantilla</option>
+          @for (template of availableTemplates; track template.name) {
+            <option value="{{template.name}}">{{template.name}} - {{template.category}}</option>
+          }
+        </select>
+        @if (sendForm.get('templateName')?.invalid && sendForm.get('templateName')?.touched) {
+          <p class="error-message">Seleccione una plantilla</p>
+        }
+      </div>
+
+      <!-- Campo: Idioma -->
+      <div class="form-group">
+        <label for="languageCode" class="form-label">Idioma *</label>
+        <select id="languageCode" formControlName="languageCode" class="form-select">
+          @for (lang of availableLanguages; track lang.code) {
+            <option value="{{lang.code}}">{{lang.name}} ({{lang.code}})</option>
+          }
+        </select>
+      </div>
+
+      <!-- Parámetros de la plantilla -->
+      @if (parameters.length > 0) {
+        <div class="parameters-section">
+          <h3 class="section-title">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 20h9"></path>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+            </svg>
+            Parámetros de la plantilla
+          </h3>
+
+          @for (param of parameters.controls; track $index; let i = $index) {
+            <div class="parameter-item">
+              <div class="parameter-header">
+                <span class="parameter-label">{{getPlaceholderForParam(i)}}</span>
+                @if (parameters.length > 1) {
+                  <button
+                    type="button"
+                    class="btn-icon btn-remove"
+                    (click)="removeParameter(i)"
+                    title="Eliminar parámetro"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M18 6L6 18M6 6l12 12"></path>
+                    </svg>
+                  </button>
+                }
+              </div>
+              <div class="parameter-fields">
+                <select class="form-select" [formControl]="getParamControl(param, 'type')">
+                  <option value="text">Texto</option>
+                  <option value="currency">Moneda</option>
+                  <option value="date_time">Fecha/Hora</option>
+                  <option value="image">Imagen</option>
+                  <option value="document">Documento</option>
+                  <option value="video">Video</option>
+                  <option value="location">Ubicación</option>
+                </select>
+                <input
+                  type="text"
+                  class="form-input"
+                  [formControl]="getParamControl(param, 'text')"
+                  [placeholder]="getPlaceholderForParam(i)"
+                />
+              </div>
+            </div>
+          }
+
+          <button type="button" class="btn btn-secondary" (click)="addParameter()">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M5 12h14"></path>
+            </svg>
+            Agregar parámetro
+          </button>
+        </div>
+      }
+
+      <!-- Mensajes de estado -->
+      @if (errorMessage) {
+        <div class="alert alert-error">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <span>{{ errorMessage }}</span>
+        </div>
+      }
+
+      @if (successMessage) {
+        <div class="alert alert-success">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          <span>{{ successMessage }}</span>
+        </div>
+      }
+
+      <div class="card-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="sending || sendForm.invalid">
+          @if (sending) {
+            <svg class="icon animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+            </svg>
+          }
+          Enviar Mensaje
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
